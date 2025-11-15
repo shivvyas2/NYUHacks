@@ -2,33 +2,25 @@
 
 A collection of classic arcade games built with Next.js, TypeScript, and HTML5 Canvas.
 
+## Project Structure
+
+This is a monorepo containing both frontend and backend code:
+
+```
+├── frontend/              # Next.js frontend application
+│   ├── app/              # Next.js App Router
+│   ├── components/       # React components
+│   ├── games/            # Game implementations
+│   ├── lib/              # Utilities
+│   └── types/            # TypeScript types
+└── backend/              # Backend API and server
+```
+
 ## Games
 
 - 🐍 **Snake** - Classic snake game
 - 🏓 **Pong** - The original arcade classic
 - 🧩 **Tetris** - Stack blocks and clear lines
-
-## Project Structure
-
-```
-├── app/                    # Next.js App Router
-│   ├── games/             # Game pages
-│   ├── layout.tsx         # Root layout
-│   └── page.tsx           # Home page
-├── components/            # React components
-│   ├── GameCard.tsx      # Game card component
-│   └── GameContainer.tsx # Game canvas container
-├── games/                 # Game implementations
-│   ├── BaseGame.ts       # Base game class
-│   ├── GameRenderer.ts   # Game renderer
-│   ├── snake/            # Snake game
-│   ├── pong/             # Pong game
-│   └── tetris/           # Tetris game
-├── lib/                   # Utilities
-│   └── games.ts          # Game metadata
-└── types/                 # TypeScript types
-    └── game.ts            # Game type definitions
-```
 
 ## Getting Started
 
@@ -37,26 +29,27 @@ A collection of classic arcade games built with Next.js, TypeScript, and HTML5 C
 - Node.js 18+ 
 - npm or yarn
 
-### Installation
+### Frontend Setup
 
 ```bash
+cd frontend
 npm install
-```
-
-### Development
-
-```bash
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### Build
+### Frontend Build
 
 ```bash
+cd frontend
 npm run build
 npm start
 ```
+
+### Backend Setup
+
+Backend implementation coming soon. See `backend/README.md` for details.
 
 ## Tech Stack
 
