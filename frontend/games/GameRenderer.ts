@@ -1,46 +1,69 @@
+// GameRenderer.ts
 import { BaseGame } from './BaseGame'
 import { SubwaySurfersGame } from './subway-surfers/SubwaySurfersGame'
 import { SquidGameGame } from './squid-game/SquidGameGame'
 import { MarioGame } from './mario/MarioGame'
 import { PacManGame } from './pac-man/PacManGame'
 
-/**
- * GameRenderer
- * Handles game initialization and rendering loop.
- * Currently uses Canvas 2D, but will be updated to use Three.js WebGLRenderer.
- * Games run in fullscreen mode when selected from the main menu.
- */
 export class GameRenderer {
   private game: BaseGame | null = null
   private animationFrameId: number | null = null
   private lastTime: number = 0
   private resizeObserver: ResizeObserver | null = null
+  private usesThreeJS: boolean = false
+  private keydownHandler: ((e: KeyboardEvent) => void) | null = null
+  private canvas: HTMLCanvasElement
+  private ctx: CanvasRenderingContext2D | null = null
 
   constructor(
-    private ctx: CanvasRenderingContext2D,
+    canvas: HTMLCanvasElement,
     private gameId: string
-  ) {}
+  ) {
+    this.canvas = canvas
+  }
 
   init() {
-    const canvas = this.ctx.canvas
-
     // Initialize game with fullscreen dimensions
     switch (this.gameId) {
       case 'subway-surfers':
-        this.game = new SubwaySurfersGame(canvas.width, canvas.height)
+        this.game = new SubwaySurfersGame(this.canvas.width, this.canvas.height, this.canvas)
+        this.usesThreeJS = true
         break
       case 'squid-game':
-        this.game = new SquidGameGame(canvas.width, canvas.height)
+        this.game = new SquidGameGame(this.canvas.width, this.canvas.height, this.canvas)
+        this.usesThreeJS = true
         break
       case 'mario':
-        this.game = new MarioGame(canvas.width, canvas.height)
+        this.game = new MarioGame(this.canvas.width, this.canvas.height, this.canvas)
+        this.usesThreeJS = true
         break
       case 'pac-man':
-        this.game = new PacManGame(canvas.width, canvas.height)
+        this.game = new PacManGame(this.canvas.width, this.canvas.height, this.canvas)
+        this.usesThreeJS = true
         break
       default:
         console.error(`Unknown game: ${this.gameId}`)
         return
+    }
+
+    // Only get 2D context for non-Three.js games
+    if (!this.usesThreeJS) {
+      this.ctx = this.canvas.getContext('2d')
+      if (!this.ctx) {
+        console.error('Could not get 2D context')
+        return
+      }
+    } else {
+      // For Three.js games, create an overlay canvas for 2D UI
+      const overlayCanvas = document.createElement('canvas')
+      overlayCanvas.width = this.canvas.width
+      overlayCanvas.height = this.canvas.height
+      overlayCanvas.style.position = 'absolute'
+      overlayCanvas.style.top = '0'
+      overlayCanvas.style.left = '0'
+      overlayCanvas.style.pointerEvents = 'none'
+      this.canvas.parentElement?.appendChild(overlayCanvas)
+      this.ctx = overlayCanvas.getContext('2d')
     }
 
     this.game.init()
@@ -52,38 +75,22 @@ export class GameRenderer {
   private setupEventListeners() {
     if (!this.game) return
 
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't capture ESC key - let it be handled by GameContainer for exit
+    this.keydownHandler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') return
       this.game?.handleInput(e.key)
     }
 
-    window.addEventListener('keydown', handleKeyDown)
-
-    // Store cleanup function
-    this.cleanup = () => {
-      window.removeEventListener('keydown', handleKeyDown)
-    }
+    window.addEventListener('keydown', this.keydownHandler)
   }
 
   private setupResizeObserver() {
-    const canvas = this.ctx.canvas
-    
-    // Update game dimensions when canvas is resized (for fullscreen)
     const handleResize = () => {
-      if (this.game) {
-        // Note: For Three.js, we'll update the renderer size instead
-        // This is a placeholder for canvas 2D
-        const width = canvas.width
-        const height = canvas.height
-        // Game will handle resize in its update/render methods
-      }
+      // Handle resize if needed
     }
 
-    // Use ResizeObserver for better performance
     if (typeof ResizeObserver !== 'undefined') {
       this.resizeObserver = new ResizeObserver(handleResize)
-      this.resizeObserver.observe(canvas)
+      this.resizeObserver.observe(this.canvas)
     } else {
       window.addEventListener('resize', handleResize)
     }
@@ -95,15 +102,20 @@ export class GameRenderer {
     const deltaTime = currentTime - this.lastTime
     this.lastTime = currentTime
 
-    // Update game state
     this.game.update(deltaTime)
 
-    // Clear canvas
-    this.ctx.fillStyle = '#000'
-    this.ctx.fillRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height)
+    // Clear overlay canvas for UI
+    if (this.ctx && this.usesThreeJS) {
+      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
+    } else if (this.ctx && !this.usesThreeJS) {
+      this.ctx.fillStyle = '#000'
+      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
+    }
 
     // Render game
-    this.game.render(this.ctx)
+    if (this.ctx) {
+      this.game.render(this.ctx)
+    }
 
     this.animationFrameId = requestAnimationFrame(this.gameLoop)
   }
@@ -114,6 +126,9 @@ export class GameRenderer {
     }
     if (this.resizeObserver) {
       this.resizeObserver.disconnect()
+    }
+    if (this.keydownHandler) {
+      window.removeEventListener('keydown', this.keydownHandler)
     }
     this.game?.cleanup()
   }

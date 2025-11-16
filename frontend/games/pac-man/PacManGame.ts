@@ -1,5 +1,5 @@
-import { BaseGame } from '../BaseGame'
-import * as THREE from 'three'
+import { BaseGame } from '../BaseGame';
+import * as THREE from 'three';
 
 interface SAT_Question {
   question: string
@@ -105,41 +105,95 @@ export class PacManGame extends BaseGame {
   ]
 
   init(): void {
-    // Initialize Three.js
-    this.scene = new THREE.Scene()
-    this.scene.background = new THREE.Color(0x000000)
+    console.log('PacMan init called with dimensions:', this.width, 'x', this.height);
+    console.log('Canvas passed to constructor:', this.canvas);
+    console.log('THREE object:', THREE);
+    console.log('THREE.WebGLRenderer:', THREE.WebGLRenderer);
     
-    this.camera = new THREE.PerspectiveCamera(75, this.width / this.height, 0.1, 1000)
-    this.camera.position.set(0, 25, 0)
-    this.camera.lookAt(0, 0, 0)
+    if (!this.canvas) {
+      console.error('Canvas not found!');
+      return;
+    }
+
+    // Create WebGL renderer using the canvas from constructor
+    try {
+      this.renderer = new THREE.WebGLRenderer({ 
+        canvas: this.canvas, 
+        antialias: true,
+        alpha: false
+      });
+      this.renderer.setSize(this.width, this.height);
+      this.renderer.setPixelRatio(window.devicePixelRatio);
+      
+      console.log('Renderer created successfully');
+    } catch (error) {
+      console.error('Error creating renderer:', error);
+      console.error('THREE.WebGLRenderer type:', typeof THREE.WebGLRenderer);
+      return;
+    }
+
+    // Create scene and camera
+    this.scene = new THREE.Scene();
+    this.scene.background = new THREE.Color(0x1a1a2e);
     
-    this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true })
-    this.renderer.setSize(this.width, this.height)
+    // Position camera to look down at the maze from above
+    this.camera = new THREE.PerspectiveCamera(60, this.width / this.height, 0.1, 1000);
+    this.camera.position.set(0, 35, 0);
+    this.camera.lookAt(0, 0, 0);
     
-    // Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6)
-    this.scene.add(ambientLight)
+    console.log('PacMan: Scene initialized', {
+      width: this.width,
+      height: this.height,
+      camera: this.camera.position
+    });
     
-    const pointLight = new THREE.PointLight(0xffffff, 0.8)
-    pointLight.position.set(0, 15, 0)
-    this.scene.add(pointLight)
+    // Lighting - make it brighter
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+    this.scene.add(ambientLight);
+    
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
+    directionalLight.position.set(0, 20, 0);
+    this.scene.add(directionalLight);
+    
+    // Add a helper light
+    const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.6);
+    this.scene.add(hemisphereLight);
+    
+    // Add ground plane to make sure something is visible
+    const groundGeometry = new THREE.PlaneGeometry(50, 50);
+    const groundMaterial = new THREE.MeshPhongMaterial({ 
+      color: 0x0a0a0a,
+      side: THREE.DoubleSide
+    });
+    const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -0.1;
+    this.scene.add(ground);
+    
+    console.log('Lighting and ground added');
     
     // Create maze
-    this.generateMaze()
-    this.createMazeWalls()
+    this.generateMaze();
+    this.createMazeWalls();
     
     // Create Pac-Man
-    const pacmanGeometry = new THREE.SphereGeometry(0.6, 32, 32, 0, Math.PI * 1.5)
-    const pacmanMaterial = new THREE.MeshPhongMaterial({ color: 0xffff00 })
-    this.pacman = new THREE.Mesh(pacmanGeometry, pacmanMaterial)
-    this.pacman.position.set(this.pacmanPos.x, 0.6, this.pacmanPos.z)
-    this.scene.add(this.pacman)
+    const pacmanGeometry = new THREE.SphereGeometry(0.6, 32, 32, 0, Math.PI * 1.5);
+    const pacmanMaterial = new THREE.MeshPhongMaterial({ 
+      color: 0xffff00,
+      emissive: 0xffaa00,
+      emissiveIntensity: 0.3
+    });
+    this.pacman = new THREE.Mesh(pacmanGeometry, pacmanMaterial);
+    this.pacman.position.set(this.pacmanPos.x, 0.6, this.pacmanPos.z);
+    this.scene.add(this.pacman);
+    
+    console.log('Pacman created at:', this.pacmanPos);
     
     // Create ghosts
-    this.createGhosts()
+    this.createGhosts();
     
     // Create dots and power pellets
-    this.createDots()
+    this.createDots();
     
     this.setState({ 
       score: 0, 
@@ -147,7 +201,7 @@ export class PacManGame extends BaseGame {
       lives: 3, 
       isPaused: false, 
       isGameOver: false 
-    })
+    });
   }
 
   private generateMaze(): void {
@@ -179,10 +233,16 @@ export class PacManGame extends BaseGame {
 
   private createMazeWalls(): void {
     const wallGeometry = new THREE.BoxGeometry(this.cellSize, 2, this.cellSize)
-    const wallMaterial = new THREE.MeshPhongMaterial({ color: 0x0000ff })
+    const wallMaterial = new THREE.MeshPhongMaterial({ 
+      color: 0x2196f3,
+      emissive: 0x1565c0,
+      emissiveIntensity: 0.2
+    })
     
     const startX = -this.maze[0].length / 2 * this.cellSize
     const startZ = -this.maze.length / 2 * this.cellSize
+    
+    console.log('Creating walls at:', { startX, startZ })
     
     for (let row = 0; row < this.maze.length; row++) {
       for (let col = 0; col < this.maze[row].length; col++) {
@@ -198,11 +258,12 @@ export class PacManGame extends BaseGame {
         }
       }
     }
+    
+    console.log(`Created ${this.walls.length} walls`)
   }
 
   private createGhosts(): void {
     const ghostColors = [0xff0000, 0xffb8ff, 0x00ffff, 0xffb851]
-    const ghostNames = ['Blinky', 'Pinky', 'Inky', 'Clyde']
     
     ghostColors.forEach((color, i) => {
       const ghostGeometry = new THREE.SphereGeometry(0.6, 16, 16)
@@ -279,6 +340,7 @@ export class PacManGame extends BaseGame {
 
   update(deltaTime: number): void {
     if (this.state.isPaused || this.state.isGameOver) return
+    if (!this.pacman || !this.scene) return // Safety check
     
     // Update question timer
     if (this.showQuestion) {
@@ -326,6 +388,8 @@ export class PacManGame extends BaseGame {
   }
 
   private movePacman(): void {
+    if (!this.pacman) return // Safety check
+    
     // Try to change direction
     if (this.nextDir.x !== 0 || this.nextDir.z !== 0) {
       const newX = this.pacmanPos.x + this.nextDir.x * this.moveSpeed
@@ -485,6 +549,9 @@ export class PacManGame extends BaseGame {
       this.setState({ score: this.state.score + 100 })
       this.powerMode = true
       this.powerModeTimer = 5000
+      this.ghosts.forEach(ghost => {
+        (ghost.mesh.material as THREE.MeshPhongMaterial).color.setHex(0x0000ff)
+      })
     } else {
       this.setState({ lives: this.state.lives - 1 })
       if (this.state.lives <= 0) {
@@ -497,6 +564,8 @@ export class PacManGame extends BaseGame {
   }
 
   private resetPositions(): void {
+    if (!this.pacman) return // Safety check
+    
     this.pacmanPos = { 
       x: (-this.maze[0].length / 2 + 1) * this.cellSize, 
       z: (-this.maze.length / 2 + 1) * this.cellSize 
@@ -519,7 +588,16 @@ export class PacManGame extends BaseGame {
     // Recreate dots
     this.dots.forEach(dot => this.scene.remove(dot))
     this.dots = []
+    this.totalDots = 0
     this.createDots()
+    
+    // Reset power pellets
+    this.powerPellets.forEach(pellet => {
+      if (!pellet.active) {
+        pellet.active = true
+        this.scene.add(pellet.mesh)
+      }
+    })
     
     // Reset positions
     this.resetPositions()
@@ -531,10 +609,13 @@ export class PacManGame extends BaseGame {
   }
 
   render(ctx: CanvasRenderingContext2D): void {
-    // Render Three.js scene
-    this.renderer.render(this.scene, this.camera)
+    // Render Three.js scene FIRST
+    if (this.renderer && this.scene && this.camera) {
+      this.renderer.render(this.scene, this.camera)
+    }
     
-    // Overlay UI
+    // Now overlay UI on top of the WebGL canvas
+    ctx.save()
     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)'
     ctx.fillRect(0, 0, this.width, 80)
     
@@ -604,10 +685,12 @@ export class PacManGame extends BaseGame {
       ctx.font = '18px Arial'
       ctx.fillText('Press R to Restart', this.width / 2 - 90, this.height / 2 + 60)
     }
+    
+    ctx.restore()
   }
 
   handleInput(key: string): void {
-    if (this.state.isGameOver && key === 'r') {
+    if (this.state.isGameOver && key.toLowerCase() === 'r') {
       this.cleanup()
       this.init()
       return
@@ -645,14 +728,31 @@ export class PacManGame extends BaseGame {
 
   cleanup(): void {
     // Clean up Three.js resources
-    this.scene.traverse((object: THREE.Object3D): void => {
-      if (object instanceof THREE.Mesh) {
-      ;(object.geometry as THREE.BufferGeometry).dispose()
-      if ((object.material as THREE.Material) instanceof THREE.Material) {
-        ;(object.material as THREE.Material).dispose()
-      }
-      }
-    })
-    this.renderer.dispose()
+    if (this.scene) {
+      this.scene.traverse((object: THREE.Object3D): void => {
+        if (object instanceof THREE.Mesh) {
+          if (object.geometry) {
+            object.geometry.dispose()
+          }
+          if (object.material) {
+            if (Array.isArray(object.material)) {
+              object.material.forEach(material => material.dispose())
+            } else {
+              object.material.dispose()
+            }
+          }
+        }
+      })
+    }
+    
+    if (this.renderer) {
+      this.renderer.dispose()
+    }
+    
+    // Clear arrays
+    this.ghosts = []
+    this.dots = []
+    this.powerPellets = []
+    this.walls = []
   }
 }

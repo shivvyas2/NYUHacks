@@ -4,8 +4,8 @@ import { GameState } from '@/types/game'
  * Base Game Class
  * All games extend this class and use Three.js for 3D rendering.
  * 
- * Note: The render method currently uses Canvas 2D for placeholders,
- * but will be updated to use Three.js WebGLRenderer in implementations.
+ * IMPORTANT: This file should NOT import any game implementations
+ * to avoid circular dependencies.
  */
 export abstract class BaseGame {
   protected state: GameState = {
@@ -18,7 +18,8 @@ export abstract class BaseGame {
 
   constructor(
     protected width: number,
-    protected height: number
+    protected height: number,
+    protected canvas: HTMLCanvasElement
   ) {}
 
   abstract init(): void
@@ -40,3 +41,4 @@ export abstract class BaseGame {
   }
 }
 
+// DO NOT add any exports or imports of game classes here!

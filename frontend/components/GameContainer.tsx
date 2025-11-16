@@ -1,87 +1,59 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useRef } from 'react'
 import { GameRenderer } from '@/games/GameRenderer'
 
 interface GameContainerProps {
-  gameId: string
+  game: {
+    id: string
+    title: string
+  }
 }
 
-export function GameContainer({ gameId }: GameContainerProps) {
+export function GameContainer({ game }: GameContainerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const router = useRouter()
-  const [showExitButton, setShowExitButton] = useState(true)
+  const rendererRef = useRef<GameRenderer | null>(null)
 
   useEffect(() => {
-    if (!canvasRef.current || !containerRef.current) return
+    if (!canvasRef.current) return
 
     const canvas = canvasRef.current
-    const container = containerRef.current
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
 
-    // Set canvas to fullscreen dimensions
-    const resizeCanvas = () => {
-      canvas.width = window.innerWidth
-      canvas.height = window.innerHeight
-    }
+    // Set canvas to full screen
+    canvas.width = window.innerWidth
+    canvas.height = window.innerHeight
 
-    resizeCanvas()
-    window.addEventListener('resize', resizeCanvas)
+    // Initialize game renderer - pass canvas directly, not context
+    rendererRef.current = new GameRenderer(canvas, game.id)
+    rendererRef.current.init()
 
-    // Initialize game
-    const gameRenderer = new GameRenderer(ctx, gameId)
-    gameRenderer.init()
-
-    // Handle ESC key to exit
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        router.push('/')
+    // Handle resize
+    const handleResize = () => {
+      if (canvasRef.current) {
+        canvasRef.current.width = window.innerWidth
+        canvasRef.current.height = window.innerHeight
       }
     }
 
-    window.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('resize', handleResize)
 
-    // Auto-hide exit button after 3 seconds
-    const hideTimer = setTimeout(() => {
-      setShowExitButton(false)
-    }, 3000)
-
+    // Cleanup
     return () => {
-      window.removeEventListener('resize', resizeCanvas)
-      window.removeEventListener('keydown', handleKeyDown)
-      clearTimeout(hideTimer)
-      gameRenderer.cleanup()
+      window.removeEventListener('resize', handleResize)
+      rendererRef.current?.cleanup()
     }
-  }, [gameId, router])
-
-  const handleExit = () => {
-    router.push('/')
-  }
+  }, [game.id])
 
   return (
     <div ref={containerRef} className="relative w-full h-full">
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 w-full h-full"
-      />
-      {showExitButton && (
-        <button
-          onClick={handleExit}
-          className="absolute top-4 right-4 z-10 px-4 py-2 bg-black/70 hover:bg-black/90 text-white rounded-lg border border-white/20 transition-all duration-300 backdrop-blur-sm"
-          onMouseEnter={() => setShowExitButton(true)}
-        >
-          <span className="mr-2">←</span>
-          Exit Game (ESC)
-        </button>
-      )}
-      <div
-        className="absolute top-4 right-4 z-0 w-20 h-10"
-        onMouseEnter={() => setShowExitButton(true)}
+        className="w-full h-full"
+        style={{ display: 'block' }}
       />
     </div>
   )
 }
 
+export default GameContainer
