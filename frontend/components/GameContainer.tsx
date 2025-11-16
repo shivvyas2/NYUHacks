@@ -14,16 +14,17 @@ interface GameContainerProps {
 
 export function GameContainer({ game }: GameContainerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const uiCanvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const rendererRef = useRef<GameRenderer | null>(null)
 
   // Render specific game containers for Three.js games
-  if (gameId === 'whackamole') {
-    return <WhackAMoleGameContainer gameId={gameId} />
+  if (game.id === 'whackamole') {
+    return <WhackAMoleGameContainer gameId={game.id} />
   }
 
-  if (gameId === 'carnival') {
-    return <CarnivalGameContainer gameId={gameId} />
+  if (game.id === 'carnival') {
+    return <CarnivalGameContainer gameId={game.id} />
   }
 
   // Default HTML5 Canvas games
@@ -58,7 +59,7 @@ export function GameContainer({ game }: GameContainerProps) {
   }, [game.id])
 
   return (
-    <div ref={containerRef} className="relative w-full h-full">
+    <div ref={containerRef} className="relative w-screen h-screen" style={{ margin: 0, padding: 0, overflow: 'hidden' }}>
       <canvas
         ref={canvasRef}
         className="w-full h-full"

@@ -1,0 +1,8 @@
+Model Information:
+* title:	Small house. Hut. Barn
+* source:	https://sketchfab.com/3d-models/small-house-hut-barn-28bc466ed70f442da7e01cb833bb545b
+* author:	ScanMe (https://sketchfab.com/ScanMe)
+
+Model License:
+* license type:	SKETCHFAB Standard (https://sketchfab.com/licenses)
+* requirements:	Under basic restrictions, use worldwide, on all types of media, commercially or not, and in all types of derivative works

@@ -5,6 +5,12 @@ import { SquidGameGame } from './squid-game/SquidGameGame'
 import { MarioGame } from './mario/MarioGame'
 import { PacManGame } from './pac-man/PacManGame'
 
+/**
+ * GameRenderer
+ * Handles game initialization and rendering loop.
+ * Supports both Canvas 2D and Three.js WebGLRenderer.
+ * Games run in fullscreen mode when selected from the main menu.
+ */
 export class GameRenderer {
   private game: BaseGame | null = null
   private animationFrameId: number | null = null
@@ -12,6 +18,7 @@ export class GameRenderer {
   private resizeObserver: ResizeObserver | null = null
   private usesThreeJS: boolean = false
   private keydownHandler: ((e: KeyboardEvent) => void) | null = null
+  private keyupHandler: ((e: KeyboardEvent) => void) | null = null
   private canvas: HTMLCanvasElement
   private ctx: CanvasRenderingContext2D | null = null
 
@@ -80,12 +87,32 @@ export class GameRenderer {
       this.game?.handleInput(e.key)
     }
 
+    this.keyupHandler = (e: KeyboardEvent) => {
+      // Handle key release for games that need it (like squid game)
+      if ('handleKeyRelease' in (this.game as any)) {
+        (this.game as any).handleKeyRelease(e.key)
+      }
+    }
+
     window.addEventListener('keydown', this.keydownHandler)
+    window.addEventListener('keyup', this.keyupHandler)
   }
 
   private setupResizeObserver() {
     const handleResize = () => {
-      // Handle resize if needed
+      if (this.game) {
+        // For Three.js games, update renderer size
+        if (this.gameId === 'squid-game' && 'gameObjects' in this.game) {
+          const gameObjects = (this.game as any).gameObjects
+          if (gameObjects?.renderer) {
+            const width = this.canvas.width || window.innerWidth
+            const height = this.canvas.height || window.innerHeight
+            gameObjects.renderer.setSize(width, height)
+            gameObjects.camera.aspect = width / height
+            gameObjects.camera.updateProjectionMatrix()
+          }
+        }
+      }
     }
 
     if (typeof ResizeObserver !== 'undefined') {
@@ -113,7 +140,10 @@ export class GameRenderer {
     }
 
     // Render game
-    if (this.ctx) {
+    if (this.gameId === 'squid-game') {
+      // Three.js games handle their own rendering
+      this.game.render(null as any) // Pass null, game handles Three.js rendering
+    } else if (this.ctx) {
       this.game.render(this.ctx)
     }
 
@@ -129,6 +159,9 @@ export class GameRenderer {
     }
     if (this.keydownHandler) {
       window.removeEventListener('keydown', this.keydownHandler)
+    }
+    if (this.keyupHandler) {
+      window.removeEventListener('keyup', this.keyupHandler)
     }
     this.game?.cleanup()
   }

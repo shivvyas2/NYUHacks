@@ -23,8 +23,7 @@ export default function GamePage({ params }: GamePageProps) {
   }
 
   return (
-    <div className="fixed inset-0 w-full h-full bg-black overflow-hidden">
-      {/* Pass the game object or gameId to the container */}
+    <div className="fixed inset-0 w-screen h-screen bg-black overflow-hidden" style={{ margin: 0, padding: 0 }}>
       <GameContainer game={game} />
     </div>
   );
