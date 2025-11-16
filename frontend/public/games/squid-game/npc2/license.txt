@@ -1,0 +1,8 @@
+Model Information:
+* title:	Female Running Free Animation (20 frames loop)
+* source:	https://sketchfab.com/3d-models/female-running-free-animation-20-frames-loop-a2d122fc447248559dc842a0f2865153
+* author:	Denys Almaral (https://sketchfab.com/denysalmaral)
+
+Model License:
+* license type:	SKETCHFAB Standard (https://sketchfab.com/licenses)
+* requirements:	Under basic restrictions, use worldwide, on all types of media, commercially or not, and in all types of derivative works
