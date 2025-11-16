@@ -1,14 +1,24 @@
+# Core API
 fastapi==0.115.0
-uvicorn==0.32.0
+uvicorn[standard]==0.32.0
 pydantic==2.9.2
-sqlalchemy==2.0.35
-openai==1.54.0
+pydantic-settings==2.1.0
 python-dotenv==1.0.1
 httpx==0.27.2
 requests==2.32.3
+python-multipart==0.0.6
+
+# Database
+sqlalchemy==2.0.35
+supabase==2.9.0
+
+# AI & Search
+openai==1.54.0
 duckduckgo-search==6.3.5
 beautifulsoup4==4.12.3
 
-# PostgreSQL driver (install when using Supabase)
-# psycopg[binary]==3.2.3  # Uncomment for Supabase/PostgreSQL
+# Authentication
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+email-validator==2.1.0
 

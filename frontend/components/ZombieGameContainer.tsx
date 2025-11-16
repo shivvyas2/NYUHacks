@@ -34,8 +34,9 @@ export default function ZombieGameContainer() {
       const { ZombieGame } = await import('@/games/zombie/ZombieGame')
       
       const canvas = canvasRef.current!
-      canvas.width = 1200
-      canvas.height = 800
+      // Set canvas to full screen
+      canvas.width = window.innerWidth
+      canvas.height = window.innerHeight
 
       const game = new ZombieGame(canvas, satQuestions)
       gameRef.current = game
@@ -63,8 +64,9 @@ export default function ZombieGameContainer() {
       // Handle window resize
       const handleResize = () => {
         if (canvas && game) {
-          const rect = canvas.getBoundingClientRect()
-          game.resize(rect.width, rect.height)
+          canvas.width = window.innerWidth
+          canvas.height = window.innerHeight
+          game.resize(window.innerWidth, window.innerHeight)
         }
       }
       window.addEventListener('resize', handleResize)
@@ -109,7 +111,7 @@ export default function ZombieGameContainer() {
   }
 
   return (
-    <div className="relative w-full h-screen bg-black overflow-hidden">
+    <div className="fixed inset-0 w-screen h-screen bg-black overflow-hidden" style={{ margin: 0, padding: 0 }}>
       {/* HUD */}
       <div className="absolute top-0 left-0 right-0 z-10 p-4 bg-gradient-to-b from-black/80 to-transparent">
         <div className="max-w-7xl mx-auto flex justify-between items-start text-white">

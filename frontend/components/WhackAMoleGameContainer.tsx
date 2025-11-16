@@ -31,13 +31,8 @@ export function WhackAMoleGameContainer({ gameId }: WhackAMoleGameContainerProps
       const { WhackAMoleGame: WhackAMoleGameClass } = await import('@/games/whackamole/WhackAMoleGame')
 
       resizeHandler = () => {
-        const container = canvas.parentElement
-        if (container) {
-          const width = container.clientWidth
-          const height = 500
-          canvas.width = width
-          canvas.height = height
-        }
+        canvas.width = window.innerWidth
+        canvas.height = window.innerHeight
       }
 
       resizeHandler()
@@ -56,9 +51,17 @@ export function WhackAMoleGameContainer({ gameId }: WhackAMoleGameContainerProps
         setGameState(state)
       }
 
-      game.onGameOver = (analyticsData) => {
+      game.onGameOver = async (analyticsData) => {
         setAnalytics(analyticsData)
         setGameOver(true)
+        
+        // Save score to database via FastAPI
+        try {
+          const { apiClient } = await import('@/lib/api/client')
+          await apiClient.saveScore('whackamole', analyticsData)
+        } catch (error) {
+          console.error('Error saving score:', error)
+        }
       }
 
       game.init()
@@ -112,13 +115,18 @@ export function WhackAMoleGameContainer({ gameId }: WhackAMoleGameContainerProps
   }
 
   return (
-    <div className="w-full max-w-6xl mx-auto">
+    <div className="fixed inset-0 w-screen h-screen bg-black overflow-hidden" style={{ margin: 0, padding: 0 }}>
       {/* Game Canvas with Overlays */}
-      <div className="relative bg-gray-900 rounded-lg overflow-hidden border-2 border-gray-700 shadow-2xl">
+      <div className="relative w-full h-full">
         <canvas
           ref={canvasRef}
-          className="w-full h-auto"
-          style={{ cursor: 'url("data:image/svg+xml;utf8,<svg xmlns=%27http://www.w3.org/2000/svg%27 width=%2732%27 height=%2732%27 viewBox=%270 0 32 32%27><text y=%2728%27 font-size=%2728%27>🔨</text></svg>") 8 24, auto' }}
+          className="absolute inset-0 w-full h-full"
+          style={{ 
+            cursor: 'url("data:image/svg+xml;utf8,<svg xmlns=%27http://www.w3.org/2000/svg%27 width=%2732%27 height=%2732%27 viewBox=%270 0 32 32%27><text y=%2728%27 font-size=%2728%27>🔨</text></svg>") 8 24, auto',
+            display: 'block',
+            margin: 0,
+            padding: 0
+          }}
           tabIndex={-1}
         />
 
@@ -167,50 +175,38 @@ export function WhackAMoleGameContainer({ gameId }: WhackAMoleGameContainerProps
         )}
 
         {/* Instruction */}
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-yellow-500 text-black px-6 py-2 rounded-full font-bold text-sm shadow-lg animate-pulse">
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-yellow-500 text-black px-6 py-2 rounded-full font-bold text-sm shadow-lg animate-pulse z-10">
           🖱️ CLICK THE CORRECT MOLE!
         </div>
-      </div>
 
-      {/* HUD Stats - Simple Single Line */}
-      {gameState && !gameOver && (
-        <div className="mt-3 bg-gray-800 rounded-lg px-6 py-2 border border-gray-700 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-gray-400 text-sm">Score:</span>
-            <span className="text-white font-bold text-lg">{gameState.score}</span>
+        {/* HUD Stats - Overlay Top Right */}
+        {gameState && !gameOver && (
+          <div className="absolute top-20 right-4 bg-black/80 backdrop-blur-sm rounded-lg px-4 py-3 border border-gray-700 flex flex-col gap-2 z-10">
+            <div className="flex items-center gap-2">
+              <span className="text-gray-400 text-sm">Score:</span>
+              <span className="text-white font-bold text-lg">{gameState.score}</span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <span className="text-gray-400 text-sm">Streak:</span>
+              <span className="text-orange-400 font-bold text-lg">
+                {gameState.streak > 0 ? `🔥 ${gameState.streak}` : '—'}
+              </span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <span className="text-gray-400 text-sm">Question:</span>
+              <span className="text-white font-bold text-lg">
+                {gameState.currentQuestionIndex + 1}/{gameState.totalQuestions}
+              </span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <span className="text-gray-400 text-sm">Correct:</span>
+              <span className="text-green-400 font-bold text-lg">{gameState.correctAnswers}</span>
+            </div>
           </div>
-          
-          <div className="flex items-center gap-2">
-            <span className="text-gray-400 text-sm">Streak:</span>
-            <span className="text-orange-400 font-bold text-lg">
-              {gameState.streak > 0 ? `🔥 ${gameState.streak}` : '—'}
-            </span>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <span className="text-gray-400 text-sm">Question:</span>
-            <span className="text-white font-bold text-lg">
-              {gameState.currentQuestionIndex + 1}/{gameState.totalQuestions}
-            </span>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <span className="text-gray-400 text-sm">Correct:</span>
-            <span className="text-green-400 font-bold text-lg">{gameState.correctAnswers}</span>
-          </div>
-        </div>
-      )}
-
-      {/* Instructions Below Game */}
-      <div className="mt-3 bg-gradient-to-r from-purple-900 to-pink-900 rounded-lg p-3 border-2 border-yellow-500 shadow-xl">
-        <div className="text-center text-white">
-          <div className="font-bold text-lg mb-2 text-yellow-300">🔨 How to Play</div>
-          <div className="text-sm text-gray-100 space-x-4">
-            <span>🖱️ <strong>Click moles</strong></span>
-            <span>🎯 <strong>Hit the correct answer</strong></span>
-            <span>⏰ <strong>3 seconds per question!</strong></span>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Game Over Modal */}

@@ -11,6 +11,7 @@ export interface GameState {
   lives: number
   isPaused: boolean
   isGameOver: boolean
+  isGameStarted?: boolean // For games with start screens
 }
 
 export interface GameConfig {

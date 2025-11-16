@@ -18,13 +18,14 @@
         "name": "next"
       }
     ],
+    "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
       "@/components/*": ["./components/*"],
       "@/app/*": ["./app/*"],
       "@/games/*": ["./games/*"],
       "@/lib/*": ["./lib/*"],
-      "@/types/*": ["./types/*"],
+      "@/types/*": ["games/subway-surfers/types/*"],
       "@/utils/*": ["./utils/*"]
     }
   },

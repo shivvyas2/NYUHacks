@@ -1,6 +1,7 @@
 'use client'
 
 import { GameAnalytics } from '@/games/whackamole/types'
+import Link from 'next/link'
 
 interface GameOverModalProps {
   analytics: GameAnalytics
@@ -80,9 +81,15 @@ export function GameOverModal({ analytics, onRestart }: GameOverModalProps) {
           >
             🎮 Play Again
           </button>
+          <Link
+            href="/stats"
+            className="block w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-bold text-lg py-3 rounded-xl transition-all shadow-lg hover:shadow-xl active:scale-95 text-center"
+          >
+            📊 View Statistics
+          </Link>
           <div className="text-center p-2 bg-blue-900/20 border border-blue-500/30 rounded-lg">
             <p className="text-blue-300 text-xs">
-              🤖 Analytics sent to AI for personalized learning
+              ✅ Score saved! Check your stats to see your progress
             </p>
           </div>
         </div>

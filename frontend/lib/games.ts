@@ -1,4 +1,4 @@
-import { Game } from '@/types/game'
+import { Game } from '@/games/subway-surfers/types/game'
 
 export const games: Game[] = [
   {
@@ -20,21 +20,21 @@ export const games: Game[] = [
     status: 'available',
   },
   {
-    id: 'snake',
-    name: 'Snake',
-    description: 'Classic snake game - eat food and grow longer!',
+    id: 'subway-surfers',
+    name: 'Subway Surfers',
+    description: 'Endless runner - dodge obstacles and collect coins!',
     status: 'available',
   },
   {
-    id: 'pong',
-    name: 'Pong',
-    description: 'The original arcade classic - bounce the ball!',
+    id: 'squid-game',
+    name: 'Squid Game',
+    description: 'Survive the challenges inspired by the popular series!',
     status: 'available',
   },
   {
-    id: 'tetris',
-    name: 'Tetris',
-    description: 'Stack blocks and clear lines in this puzzle classic!',
+    id: 'pac-man',
+    name: 'Pac-Man',
+    description: 'Classic maze game - eat dots and avoid ghosts!',
     status: 'available',
   },
 ]

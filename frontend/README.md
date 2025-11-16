@@ -1,6 +1,6 @@
 # Frontend
 
-Next.js frontend application for the NYU Hacks Arcade.
+Next.js frontend application for the NYU Hacks Arcade. All games are built with Three.js for 3D graphics.
 
 ## Project Structure
 
@@ -16,9 +16,18 @@ frontend/
 ├── games/                 # Game implementations
 │   ├── BaseGame.ts       # Base game class
 │   ├── GameRenderer.ts   # Game renderer
-│   ├── snake/            # Snake game
-│   ├── pong/             # Pong game
-│   └── tetris/           # Tetris game
+│   ├── subway-surfers/   # Subway Surfers game
+│   │   ├── SubwaySurfersGame.ts
+│   │   └── assets/       # Game assets (models, textures, etc.)
+│   ├── squid-game/       # Squid Game
+│   │   ├── SquidGameGame.ts
+│   │   └── assets/       # Game assets
+│   ├── mario/            # Mario game
+│   │   ├── MarioGame.ts
+│   │   └── assets/       # Game assets
+│   └── pac-man/          # Pac-Man game
+│       ├── PacManGame.ts
+│       └── assets/       # Game assets
 ├── lib/                   # Utilities
 │   └── games.ts          # Game metadata
 └── types/                 # TypeScript types
@@ -52,17 +61,21 @@ npm start
 
 - **Next.js 14** - React framework
 - **TypeScript** - Type safety
-- **HTML5 Canvas** - Game rendering
+- **Three.js** - 3D graphics and game rendering
+- **HTML5 Canvas** - Canvas rendering (for placeholders)
 
 ## Development Guidelines
 
 ### Adding a New Game
 
-1. Create a new game class in `games/[game-name]/[GameName]Game.ts`
-2. Extend the `BaseGame` class
-3. Implement required methods: `init()`, `update()`, `render()`, `handleInput()`
-4. Register the game in `games/GameRenderer.ts`
-5. Add game metadata to `lib/games.ts`
+1. Create a new game folder in `games/[game-name]/`
+2. Create the game class file `[GameName]Game.ts` extending `BaseGame`
+3. Create an `assets/` folder for game assets (models, textures, sounds, etc.)
+4. Implement required methods: `init()`, `update()`, `render()`, `handleInput()`
+   - Use Three.js for 3D rendering (Scene, Camera, Renderer)
+   - Load assets from the `assets/` folder
+5. Register the game in `games/GameRenderer.ts`
+6. Add game metadata to `lib/games.ts`
 
 ### Game Architecture
 
