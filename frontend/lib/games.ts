@@ -14,9 +14,6 @@ export const games: Game[] = [
     status: 'available',
   },
   {
-    id: 'snake',
-    name: 'Snake',
-    description: 'Classic snake game - eat food and grow longer!',
     id: 'subway-surfers',
     name: 'Subway Surfers',
     description: 'Endless runner - dodge obstacles and collect coins!',
@@ -26,12 +23,6 @@ export const games: Game[] = [
     id: 'squid-game',
     name: 'Squid Game',
     description: 'Survive the challenges inspired by the popular series!',
-    status: 'available',
-  },
-  {
-    id: 'mario',
-    name: 'Mario',
-    description: 'Classic platformer - jump, run, and collect coins!',
     status: 'available',
   },
   {

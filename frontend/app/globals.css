@@ -27,15 +27,423 @@ body {
   margin: 0;
   padding: 0;
   position: relative;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  font-family: 'Courier New', 'Courier', monospace;
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: unset;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
 }
 
 a {
   color: inherit;
   text-decoration: none;
+}
+
+/* Retro Game Boy Styling */
+.retro-gameboy-bg {
+  background: #000000;
+  background-image: 
+    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.3) 2px, rgba(0, 0, 0, 0.3) 4px),
+    repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0, 0, 0, 0.3) 2px, rgba(0, 0, 0, 0.3) 4px);
+}
+
+.retro-gameboy-container {
+  padding: 20px;
+}
+
+.retro-screen-frame {
+  background: #ffffff;
+  border: 8px solid #d0d0d0;
+  border-radius: 4px;
+  padding: 16px;
+  box-shadow: 
+    inset 0 0 0 4px #f5f5f5,
+    inset 0 0 0 8px #e0e0e0,
+    0 0 20px rgba(0, 0, 0, 0.3),
+    0 8px 0 #d0d0d0,
+    0 12px 0 #b0b0b0;
+}
+
+.retro-screen-border {
+  background: #e0e0e0;
+  border: 4px solid #d0d0d0;
+  border-radius: 2px;
+  padding: 12px;
+}
+
+.retro-screen-content {
+  background: #ffffff;
+  border: 2px solid #d0d0d0;
+  border-radius: 2px;
+  padding: 24px;
+  min-height: 500px;
+}
+
+.retro-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #000000;
+  text-shadow: 
+    2px 2px 0 #d0d0d0,
+    3px 3px 0 #b0b0b0;
+  letter-spacing: 2px;
+  font-family: 'Courier New', 'Courier', monospace;
+  text-transform: uppercase;
+}
+
+.retro-subtitle {
+  font-size: 14px;
+  color: #666666;
+  letter-spacing: 1px;
+  font-weight: bold;
+}
+
+.retro-divider {
+  height: 3px;
+  background: #000000;
+  margin: 8px 0;
+  box-shadow: 0 2px 0 #d0d0d0;
+}
+
+.retro-game-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.retro-game-item {
+  background: #f5f5f5;
+  border: 3px solid #000000;
+  border-radius: 0;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.1s;
+  position: relative;
+}
+
+.retro-game-item:hover,
+.retro-game-item:focus {
+  background: #ffffff;
+  border-color: #333333;
+  transform: translateX(4px);
+  box-shadow: -4px 0 0 #000000;
+}
+
+.retro-game-item:active {
+  transform: translateX(2px);
+}
+
+.retro-game-number {
+  font-size: 16px;
+  font-weight: bold;
+  color: #000000;
+  min-width: 24px;
+  font-family: 'Courier New', 'Courier', monospace;
+}
+
+.retro-game-content {
+  flex: 1;
+}
+
+.retro-game-name {
+  font-size: 16px;
+  font-weight: bold;
+  color: #000000;
+  margin-bottom: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.retro-game-desc {
+  font-size: 12px;
+  color: #666666;
+  line-height: 1.2;
+}
+
+.retro-game-arrow {
+  font-size: 14px;
+  color: #000000;
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+
+.retro-game-item:hover .retro-game-arrow,
+.retro-game-item:focus .retro-game-arrow {
+  opacity: 1;
+}
+
+.retro-footer {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  padding-top: 16px;
+  border-top: 2px solid #000000;
+}
+
+.retro-instruction {
+  font-size: 12px;
+  color: #000000;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: bold;
+}
+
+.retro-key {
+  background: #000000;
+  color: #ffffff;
+  padding: 2px 6px;
+  border: 2px solid #333333;
+  font-size: 10px;
+  font-weight: bold;
+  min-width: 20px;
+  text-align: center;
+  box-shadow: 
+    inset 0 0 0 1px #666666,
+    0 2px 0 #000000;
+}
+
+/* Game Boy Device Container */
+.retro-gameboy-device {
+  background: #f5f0e8;
+  border: 12px solid #d4c5b0;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 
+    0 0 0 4px #e8ddd0,
+    0 0 0 8px #f5f0e8,
+    0 20px 40px rgba(0, 0, 0, 0.6),
+    inset 0 0 20px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+/* D-Pad Styling */
+.retro-dpad-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.retro-dpad {
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+
+.retro-dpad-up,
+.retro-dpad-down {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30px;
+  height: 30px;
+  background: #2a2a2a;
+  border: 3px solid #1a1a1a;
+  box-shadow: 
+    inset 0 0 0 2px #4a4a4a,
+    0 3px 0 #1a1a1a,
+    inset 0 -3px 0 rgba(0, 0, 0, 0.3);
+}
+
+.retro-dpad-up {
+  top: 0;
+  border-radius: 4px 4px 0 0;
+}
+
+.retro-dpad-down {
+  bottom: 0;
+  border-radius: 0 0 4px 4px;
+}
+
+.retro-dpad-middle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  gap: 0;
+}
+
+.retro-dpad-left,
+.retro-dpad-center,
+.retro-dpad-right {
+  width: 30px;
+  height: 30px;
+  background: #2a2a2a;
+  border: 3px solid #1a1a1a;
+  box-shadow: 
+    inset 0 0 0 2px #4a4a4a,
+    0 3px 0 #1a1a1a,
+    inset 0 -3px 0 rgba(0, 0, 0, 0.3);
+}
+
+.retro-dpad-left {
+  border-radius: 4px 0 0 4px;
+}
+
+.retro-dpad-center {
+  border-left: none;
+  border-right: none;
+}
+
+.retro-dpad-right {
+  border-radius: 0 4px 4px 0;
+}
+
+/* A and B Buttons */
+.retro-buttons-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.retro-buttons {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.retro-button {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #2a2a2a;
+  border: 4px solid #1a1a1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 
+    inset 0 0 0 3px #4a4a4a,
+    0 4px 0 #1a1a1a,
+    inset 0 -4px 0 rgba(0, 0, 0, 0.3),
+    0 0 10px rgba(0, 0, 0, 0.2);
+  position: relative;
+  cursor: pointer;
+  transition: all 0.1s;
+}
+
+.retro-button:active {
+  transform: translateY(2px);
+  box-shadow: 
+    inset 0 0 0 3px #4a4a4a,
+    0 2px 0 #1a1a1a,
+    inset 0 -2px 0 rgba(0, 0, 0, 0.3);
+}
+
+.retro-button-a {
+  background: #c0392b;
+  border-color: #a93226;
+  box-shadow: 
+    inset 0 0 0 3px #e74c3c,
+    0 4px 0 #922b21,
+    inset 0 -4px 0 rgba(0, 0, 0, 0.2),
+    0 0 10px rgba(192, 57, 43, 0.3);
+}
+
+.retro-button-b {
+  background: #2a2a2a;
+  border-color: #1a1a1a;
+  box-shadow: 
+    inset 0 0 0 3px #4a4a4a,
+    0 4px 0 #1a1a1a,
+    inset 0 -4px 0 rgba(0, 0, 0, 0.3),
+    0 0 10px rgba(42, 42, 42, 0.2);
+}
+
+.retro-button-inner {
+  font-size: 18px;
+  font-weight: bold;
+  color: #ffffff;
+  text-shadow: 
+    1px 1px 0 #4a4a4a,
+    2px 2px 0 #1a1a1a;
+  font-family: 'Courier New', 'Courier', monospace;
+}
+
+.retro-button-a .retro-button-inner {
+  color: #ffffff;
+  text-shadow: 
+    1px 1px 0 #922b21,
+    2px 2px 0 #1a1a1a;
+}
+
+.retro-button-b .retro-button-inner {
+  color: #ffffff;
+  text-shadow: 
+    1px 1px 0 #4a4a4a,
+    2px 2px 0 #1a1a1a;
+}
+
+.retro-label {
+  font-size: 10px;
+  color: #2a2a2a;
+  font-weight: bold;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-family: 'Courier New', 'Courier', monospace;
+}
+
+/* Start and Select Buttons */
+.retro-start-select {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  margin-top: 20px;
+  padding: 0 20px;
+}
+
+.retro-start-select-button {
+  flex: 1;
+  max-width: 120px;
+  height: 24px;
+  background: #2a2a2a;
+  border: 3px solid #1a1a1a;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 
+    inset 0 0 0 2px #4a4a4a,
+    0 2px 0 #1a1a1a,
+    inset 0 -2px 0 rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: all 0.1s;
+}
+
+.retro-start-select-button:active {
+  transform: translateY(1px);
+  box-shadow: 
+    inset 0 0 0 2px #4a4a4a,
+    0 1px 0 #1a1a1a,
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+}
+
+.retro-start-select-label {
+  font-size: 10px;
+  color: #ffffff;
+  font-weight: bold;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-family: 'Courier New', 'Courier', monospace;
+  text-shadow: 
+    1px 1px 0 #1a1a1a;
+}
+
+/* Controls Layout */
+.retro-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0 20px;
+  margin-top: 20px;
 }
 

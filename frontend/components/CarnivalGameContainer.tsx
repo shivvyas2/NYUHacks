@@ -31,13 +31,8 @@ export function CarnivalGameContainer({ gameId }: CarnivalGameContainerProps) {
       const { CarnivalGame: CarnivalGameClass } = await import('@/games/carnival/CarnivalGame')
 
       resizeHandler = () => {
-        const container = canvas.parentElement
-        if (container) {
-          const width = container.clientWidth
-          const height = 500
-          canvas.width = width
-          canvas.height = height
-        }
+        canvas.width = window.innerWidth
+        canvas.height = window.innerHeight
       }
 
       resizeHandler()
@@ -112,12 +107,17 @@ export function CarnivalGameContainer({ gameId }: CarnivalGameContainerProps) {
   }
 
   return (
-    <div className="w-full max-w-6xl mx-auto">
+    <div className="fixed inset-0 w-screen h-screen bg-black overflow-hidden" style={{ margin: 0, padding: 0 }}>
       {/* Game Canvas with Overlays */}
-      <div className="relative bg-gray-900 rounded-lg overflow-hidden border-2 border-red-700 shadow-2xl">
+      <div className="relative w-full h-full">
         <canvas
           ref={canvasRef}
-          className="w-full h-auto cursor-crosshair"
+          className="absolute inset-0 w-full h-full cursor-crosshair"
+          style={{ 
+            display: 'block',
+            margin: 0,
+            padding: 0
+          }}
           tabIndex={-1}
         />
 
@@ -166,59 +166,46 @@ export function CarnivalGameContainer({ gameId }: CarnivalGameContainerProps) {
         )}
 
         {/* Instruction */}
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-red-600 to-pink-600 text-white px-8 py-3 rounded-full font-bold text-base shadow-2xl animate-pulse border-2 border-yellow-400">
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-red-600 to-pink-600 text-white px-8 py-3 rounded-full font-bold text-base shadow-2xl animate-pulse border-2 border-yellow-400 z-10">
           🎈 POP THE CORRECT BALLOON!
         </div>
 
         {/* Bullets Remaining */}
         {gameState && !gameOver && (
-          <div className="absolute bottom-4 left-4 bg-yellow-500 text-black px-4 py-2 rounded-lg font-bold flex items-center gap-2">
+          <div className="absolute bottom-4 left-4 bg-yellow-500 text-black px-4 py-2 rounded-lg font-bold flex items-center gap-2 z-10">
             <span>🔫 Bullets:</span>
             <span className="text-xl">{gameState.bulletsRemaining}</span>
           </div>
         )}
-      </div>
 
-      {/* HUD Stats - Simple Single Line */}
-      {gameState && !gameOver && (
-        <div className="mt-3 bg-gray-800 rounded-lg px-6 py-2 border border-gray-700 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-gray-400 text-sm">Score:</span>
-            <span className="text-white font-bold text-lg">{gameState.score}</span>
+        {/* HUD Stats - Overlay Top Right */}
+        {gameState && !gameOver && (
+          <div className="absolute top-20 right-4 bg-black/80 backdrop-blur-sm rounded-lg px-4 py-3 border border-gray-700 flex flex-col gap-2 z-10">
+            <div className="flex items-center gap-2">
+              <span className="text-gray-400 text-sm">Score:</span>
+              <span className="text-white font-bold text-lg">{gameState.score}</span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <span className="text-gray-400 text-sm">Streak:</span>
+              <span className="text-orange-400 font-bold text-lg">
+                {gameState.streak > 0 ? `🔥 ${gameState.streak}` : '—'}
+              </span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <span className="text-gray-400 text-sm">Question:</span>
+              <span className="text-white font-bold text-lg">
+                {gameState.currentQuestionIndex + 1}/{gameState.totalQuestions}
+              </span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <span className="text-gray-400 text-sm">Correct:</span>
+              <span className="text-green-400 font-bold text-lg">{gameState.correctAnswers}</span>
+            </div>
           </div>
-          
-          <div className="flex items-center gap-2">
-            <span className="text-gray-400 text-sm">Streak:</span>
-            <span className="text-orange-400 font-bold text-lg">
-              {gameState.streak > 0 ? `🔥 ${gameState.streak}` : '—'}
-            </span>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <span className="text-gray-400 text-sm">Question:</span>
-            <span className="text-white font-bold text-lg">
-              {gameState.currentQuestionIndex + 1}/{gameState.totalQuestions}
-            </span>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <span className="text-gray-400 text-sm">Correct:</span>
-            <span className="text-green-400 font-bold text-lg">{gameState.correctAnswers}</span>
-          </div>
-        </div>
-      )}
-
-      {/* Instructions Below Game */}
-      <div className="mt-3 bg-gradient-to-r from-red-900 via-pink-900 to-purple-900 rounded-lg p-4 border-2 border-yellow-400 shadow-xl">
-        <div className="text-center text-white">
-          <div className="font-bold text-xl mb-2 text-yellow-300">🎪 Carnival Balloon Shooter!</div>
-          <div className="text-sm text-gray-100 space-x-5">
-            <span>🖱️ <strong>Click to shoot</strong></span>
-            <span>🎈 <strong>Pop the correct balloon!</strong></span>
-            <span>🔫 <strong>3 bullets per question</strong></span>
-            <span>💥 <strong>Watch the balloons explode!</strong></span>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Game Over Modal */}

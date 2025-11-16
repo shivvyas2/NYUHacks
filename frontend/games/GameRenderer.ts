@@ -29,7 +29,7 @@ export class GameRenderer {
     this.canvas = canvas
   }
 
-  init() {
+  async init() {
     // Initialize game with fullscreen dimensions
     switch (this.gameId) {
       case 'subway-surfers':
@@ -74,6 +74,16 @@ export class GameRenderer {
     }
 
     this.game.init()
+    
+    // Setup Three.js for squid-game (needs async initialization)
+    if (this.gameId === 'squid-game' && 'setupThreeJS' in this.game) {
+      try {
+        await (this.game as any).setupThreeJS(this.canvas)
+      } catch (error) {
+        console.error('Failed to setup Three.js for squid-game:', error)
+      }
+    }
+    
     this.setupEventListeners()
     this.setupResizeObserver()
     this.gameLoop(0)

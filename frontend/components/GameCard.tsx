@@ -3,21 +3,19 @@ import { Game } from '@/types/game'
 
 interface GameCardProps {
   game: Game
+  index: number
 }
 
-export function GameCard({ game }: GameCardProps) {
+export function GameCard({ game, index }: GameCardProps) {
   return (
     <Link href={`/games/${game.id}`}>
-      <div className="bg-gray-900 rounded-lg p-6 border border-gray-800 hover:border-cyan-500 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/20 cursor-pointer h-full flex flex-col">
-        <div className="mb-4">
-          <h2 className="text-2xl font-bold mb-2">{game.name}</h2>
-          <p className="text-gray-400 text-sm">{game.description}</p>
+      <div className="retro-game-item group">
+        <div className="retro-game-number">{String(index + 1).padStart(2, '0')}</div>
+        <div className="retro-game-content">
+          <div className="retro-game-name">{game.name}</div>
+          <div className="retro-game-desc">{game.description}</div>
         </div>
-        <div className="mt-auto">
-          <div className="inline-block px-4 py-2 bg-cyan-600 rounded text-sm font-semibold hover:bg-cyan-500 transition-colors">
-            Play Now →
-          </div>
-        </div>
+        <div className="retro-game-arrow">▶</div>
       </div>
     </Link>
   )
