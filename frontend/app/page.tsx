@@ -1,5 +1,6 @@
 import { GameCard } from '@/components/GameCard'
 import { games } from '@/lib/games'
+import { AuthButton } from '@/components/AuthButton'
 
 export default function Home() {
   return (
@@ -15,6 +16,9 @@ export default function Home() {
               <div className="retro-screen-content">
                 {/* Header */}
                 <header className="text-center mb-8">
+                  <div className="flex justify-end mb-2">
+                    <AuthButton />
+                  </div>
                   <h1 className="retro-title mb-2">NYU HACKS ARCADE</h1>
                   <div className="retro-divider"></div>
                   <p className="retro-subtitle mt-2">SELECT GAME</p>
