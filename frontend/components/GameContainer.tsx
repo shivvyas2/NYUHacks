@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { GameRenderer } from '@/games/GameRenderer'
 import { WhackAMoleGameContainer } from './WhackAMoleGameContainer'
 import { CarnivalGameContainer } from './CarnivalGameContainer'
+import ZombieGameContainer from './ZombieGameContainer'
 
 interface GameContainerProps {
   game: {
@@ -22,8 +23,12 @@ export function GameContainer({ game }: GameContainerProps) {
   const [loadingMessage, setLoadingMessage] = useState('Initializing...')
 
   // Render specific game containers for Three.js games
-  if (game.id === 'whackamole') {
-    return <WhackAMoleGameContainer gameId={game.id} />
+  if (gameId === 'zombie') {
+    return <ZombieGameContainer />
+  }
+
+  if (gameId === 'whackamole') {
+    return <WhackAMoleGameContainer gameId={gameId} />
   }
 
   if (game.id === 'carnival') {

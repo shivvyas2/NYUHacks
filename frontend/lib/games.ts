@@ -2,6 +2,12 @@ import { Game } from '@/games/subway-surfers/types/game'
 
 export const games: Game[] = [
   {
+    id: 'zombie',
+    name: '🧟 SAT Zombie Apocalypse',
+    description: 'First-person shooter! Shoot zombies with the correct SAT answers - don\'t let them reach you!',
+    status: 'available',
+  },
+  {
     id: 'whackamole',
     name: 'SAT Whack-A-Mole',
     description: 'Whack the mole with the correct SAT answer!',

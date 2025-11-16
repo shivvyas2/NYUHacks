@@ -5,7 +5,7 @@ export const satQuestions: SATQuestion[] = [
     id: 1,
     question: 'If 2x + 5 = 15, what is the value of x?',
     options: ['5', '10', '7.5', '3'],
-    correctAnswer: 0, // Using correctAnswer internally, matches "answer" in your format
+    correctAnswer: 0,
     topic: 'Algebra',
     difficulty: 'easy',
     explanation: '2x + 5 = 15, subtract 5: 2x = 10, divide by 2: x = 5'
