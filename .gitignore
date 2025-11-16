@@ -43,6 +43,7 @@ frontend/.env.*
 
 # vercel
 .vercel
+# Note: .vercelignore and vercel.json should be committed
 
 # typescript
 *.tsbuildinfo
