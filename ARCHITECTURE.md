@@ -57,12 +57,14 @@
 │  └────────────────┬───────────────────────────────────┘   │
 │                   │                                        │
 │         ┌─────────▼─────────┐                             │
-│         │   SQLite Database  │                             │
+│         │   SUPABASE         │                             │
+│         │  (PostgreSQL +     │                             │
+│         │   Auth + pgvector) │                             │
 │         ├────────────────────┤                             │
-│         │ • Users            │                             │
-│         │ • GameSessions     │                             │
-│         │ • QuestionAttempts │                             │
-│         │ • TopicPerformance │                             │
+│         │ • Users (Auth)     │                             │
+│         │ • game_sessions    │                             │
+│         │ • question_attempts│                             │
+│         │ • user_stats       │                             │
 │         └────────────────────┘                             │
 │                                                            │
 └────────────────────────────────────────────────────────────┘
@@ -280,12 +282,11 @@ class ZombieGame {
        │ HTTPS
        │
 ┌──────▼───────┐
-│   Railway    │  ← Backend (FastAPI + SQLite)
+│  Supabase    │  ← Backend Database + Auth
 └──────┬───────┘
-       │ API
        │
 ┌──────▼───────┐
-│  OpenRouter  │  ← AI Agent (Claude 3.5)
+│  OpenRouter  │  ← AI Agent (Claude Haiku 4.5)
 └──────────────┘
 ```
 
@@ -299,11 +300,11 @@ class ZombieGame {
 - Object pooling for bullets/zombies
 
 ### Backend
-- SQLAlchemy query optimization
+- Supabase connection pooling
 - Database indexes on user_id and topic
 - Response caching for user stats
 - Async/await for AI calls
-- Connection pooling
+- DuckDuckGo search with retry logic
 
 ## 📈 Metrics & Analytics
 
@@ -354,13 +355,14 @@ class ZombieGame {
 └─────────────────┘
 ```
 
-### Vector Database for Long-Term Memory
+### Vector Database for Semantic Memory (pgvector)
 ```
-Store embeddings of:
-- Question patterns
-- Learning style
-- Similar student profiles
-- Optimal learning paths
+Supabase pgvector for embeddings:
+- Question patterns (similar mistakes)
+- Learning style identification
+- Find questions user struggles with
+- Semantic search for related topics
+- Long-term memory across sessions
 ```
 
 ---

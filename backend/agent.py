@@ -1,10 +1,10 @@
 from openai import OpenAI
 from typing import List, Dict
-from sqlalchemy.orm import Session
-from database import QuestionAttempt, UserTopicPerformance
 import json
+import time
 from config import OPENROUTER_API_KEY
 from duckduckgo_search import DDGS
+from supabase_client import SupabaseAgentOps
 
 # Use OpenRouter (compatible with OpenAI API)
 client = OpenAI(
@@ -12,61 +12,41 @@ client = OpenAI(
     api_key=OPENROUTER_API_KEY
 )
 
-# Initialize DuckDuckGo search
-ddg = DDGS()
+# Initialize DuckDuckGo search with retry capability
+def get_ddg_instance():
+    """Get a fresh DuckDuckGo instance"""
+    return DDGS(timeout=20)
 
 class SATLearningAgent:
     """
     Adaptive SAT Learning Agent with Memory & Context
-    - Analyzes user performance across sessions
+    - Analyzes user performance from Supabase
     - Identifies weak topics
-    - Generates personalized questions
+    - Generates personalized questions with Claude Haiku 4.5
     - Maintains context of learning journey
     """
     
-    def __init__(self, db: Session, user_id: int):
-        self.db = db
+    def __init__(self, user_id: str):
         self.user_id = user_id
-        self.context_memory = []  # Stores conversation/learning context
+        self.context_memory = []
+        print(f"🔗 Agent initialized for user {user_id}")
         
     def analyze_performance(self) -> Dict:
-        """Analyzes user's historical performance"""
+        """Analyzes user's historical performance from Supabase"""
         
-        # Get topic performance
-        topic_stats = self.db.query(UserTopicPerformance).filter(
-            UserTopicPerformance.user_id == self.user_id
-        ).all()
-        
-        # Get recent attempts (last 50)
-        recent_attempts = self.db.query(QuestionAttempt).filter(
-            QuestionAttempt.user_id == self.user_id
-        ).order_by(QuestionAttempt.created_at.desc()).limit(50).all()
+        performance = SupabaseAgentOps.get_user_performance(self.user_id)
+        topic_breakdown = SupabaseAgentOps.get_topic_performance(self.user_id)
         
         analysis = {
-            "total_attempts": len(recent_attempts),
-            "recent_accuracy": sum(1 for a in recent_attempts if a.is_correct) / len(recent_attempts) * 100 if recent_attempts else 0,
-            "topic_breakdown": {},
-            "weak_topics": [],
-            "strong_topics": [],
+            "total_attempts": performance.get('total_attempts', 0),
+            "recent_accuracy": performance.get('accuracy', 0),
+            "topic_breakdown": topic_breakdown,
+            "weak_topics": performance.get('weak_topics', []),
+            "strong_topics": performance.get('strong_topics', []),
             "recommended_difficulty": "medium"
         }
         
-        # Analyze by topic
-        for topic_stat in topic_stats:
-            topic_data = {
-                "accuracy": topic_stat.accuracy,
-                "attempts": topic_stat.total_attempts,
-                "avg_time": topic_stat.avg_time
-            }
-            analysis["topic_breakdown"][topic_stat.topic] = topic_data
-            
-            # Categorize weak vs strong
-            if topic_stat.accuracy < 60:
-                analysis["weak_topics"].append(topic_stat.topic)
-            elif topic_stat.accuracy > 80:
-                analysis["strong_topics"].append(topic_stat.topic)
-        
-        # Determine recommended difficulty
+        # Determine difficulty
         if analysis["recent_accuracy"] < 50:
             analysis["recommended_difficulty"] = "easy"
         elif analysis["recent_accuracy"] > 75:
@@ -74,24 +54,53 @@ class SATLearningAgent:
         
         return analysis
     
-    def search_sat_resources(self, topic: str, num_results: int = 5) -> str:
-        """Search DuckDuckGo for real SAT questions and resources"""
-        try:
-            query = f"SAT {topic} practice questions examples"
-            print(f"   🦆 DuckDuckGo searching: '{query}'")
-            results = ddg.text(query, max_results=num_results)
-            
-            context = f"\n### Real SAT Resources for {topic}:\n"
-            found_count = 0
-            for i, result in enumerate(results, 1):
-                context += f"{i}. {result['title']}\n   {result['body'][:150]}...\n"
-                found_count += 1
-            
-            print(f"   ✅ Found {found_count} resources for {topic}")
-            return context
-        except Exception as e:
-            print(f"   ⚠️  Search error: {e}")
-            return ""
+    def search_sat_resources(self, topic: str, num_results: int = 5, max_retries: int = 3) -> str:
+        """Search DuckDuckGo for real SAT questions and resources with retry logic"""
+        query = f"SAT {topic} practice questions examples"
+        print(f"   🦆 DuckDuckGo searching: '{query}'")
+        
+        for attempt in range(max_retries):
+            try:
+                # Create fresh instance for each attempt
+                ddg = get_ddg_instance()
+                
+                # Add delay between retries (exponential backoff)
+                if attempt > 0:
+                    wait_time = (2 ** attempt) * 2  # 4s, 8s, 16s
+                    print(f"   ⏳ Waiting {wait_time}s before retry {attempt + 1}...")
+                    time.sleep(wait_time)
+                
+                results = ddg.text(query, max_results=num_results)
+                
+                context = f"\n### Real SAT Resources for {topic}:\n"
+                found_count = 0
+                for i, result in enumerate(results, 1):
+                    context += f"{i}. {result['title']}\n   {result['body'][:150]}...\n"
+                    found_count += 1
+                
+                if found_count > 0:
+                    print(f"   ✅ Found {found_count} resources for {topic}")
+                    return context
+                else:
+                    print(f"   ⚠️  No results found for {topic}")
+                    return ""
+                    
+            except Exception as e:
+                error_msg = str(e)
+                if "202" in error_msg or "Ratelimit" in error_msg:
+                    if attempt < max_retries - 1:
+                        print(f"   ⚠️  Rate limited, will retry...")
+                        continue
+                    else:
+                        print(f"   ⚠️  Rate limit persists after {max_retries} attempts, skipping search")
+                else:
+                    print(f"   ⚠️  Search error: {e}")
+                    if attempt < max_retries - 1:
+                        continue
+                
+                return ""
+        
+        return ""
     
     def build_agent_context(self, analysis: Dict) -> str:
         """Builds context string for the AI agent"""
@@ -133,14 +142,15 @@ TOPIC PERFORMANCE:
             # If user has weak topics, search those
             if analysis['weak_topics']:
                 print(f"   📉 Focusing on weak topics: {', '.join(analysis['weak_topics'][:2])}")
-                for topic in analysis['weak_topics'][:2]:  # Search top 2 weak topics
+                for i, topic in enumerate(analysis['weak_topics'][:2]):  # Search top 2 weak topics
+                    if i > 0:
+                        time.sleep(3)  # 3s delay between different topic searches
                     web_context += self.search_sat_resources(topic, num_results=3)
             else:
                 # New user - search general SAT topics
                 print(f"   📚 New user - searching general SAT topics")
-                general_topics = ["Algebra", "Grammar"]
-                for topic in general_topics:
-                    web_context += self.search_sat_resources(topic, num_results=2)
+                # Only search 1 topic for new users to avoid rate limits
+                web_context += self.search_sat_resources("Algebra", num_results=2)
         
         # Build context for agent
         context = self.build_agent_context(analysis)
@@ -239,42 +249,13 @@ Generate exactly {num_questions} questions now:"""
             print(f"Response: {content[:500]}...")
             return []
     
-    def update_performance(self, question_attempts: List[Dict]):
-        """Updates user performance after game session"""
+    def update_performance(self, question_attempts: List[Dict], game_data: Dict):
+        """Updates user performance after game session in Supabase"""
         
-        for attempt in question_attempts:
-            # Record attempt
-            db_attempt = QuestionAttempt(
-                user_id=self.user_id,
-                session_id=attempt.get('session_id'),
-                question_id=attempt.get('question_id'),
-                topic=attempt.get('topic'),
-                difficulty=attempt.get('difficulty'),
-                is_correct=attempt.get('is_correct'),
-                time_spent=attempt.get('time_spent', 0)
-            )
-            self.db.add(db_attempt)
-            
-            # Update topic performance
-            topic_perf = self.db.query(UserTopicPerformance).filter(
-                UserTopicPerformance.user_id == self.user_id,
-                UserTopicPerformance.topic == attempt['topic']
-            ).first()
-            
-            if not topic_perf:
-                topic_perf = UserTopicPerformance(
-                    user_id=self.user_id,
-                    topic=attempt['topic']
-                )
-                self.db.add(topic_perf)
-            
-            # Update stats
-            topic_perf.total_attempts += 1
-            if attempt['is_correct']:
-                topic_perf.correct_attempts += 1
-            topic_perf.accuracy = (topic_perf.correct_attempts / topic_perf.total_attempts) * 100
-            
-        self.db.commit()
+        session_id = SupabaseAgentOps.save_game_session(self.user_id, game_data)
+        if session_id:
+            SupabaseAgentOps.save_question_attempts(session_id, self.user_id, question_attempts)
+            SupabaseAgentOps.update_user_stats(self.user_id, game_data)
     
     async def get_learning_insights(self) -> Dict:
         """Generates personalized learning insights using AI"""

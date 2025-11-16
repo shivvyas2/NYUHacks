@@ -1,86 +1,81 @@
-# Frontend
+# SAT Arcade - Frontend 🎮
 
-Next.js frontend application for the NYU Hacks Arcade. All games are built with Three.js for 3D graphics.
+Next.js 14 frontend with Three.js-powered 3D SAT learning games.
 
-## Project Structure
-
-```
-frontend/
-├── app/                    # Next.js App Router
-│   ├── games/             # Game pages
-│   ├── layout.tsx         # Root layout
-│   └── page.tsx           # Home page
-├── components/            # React components
-│   ├── GameCard.tsx      # Game card component
-│   └── GameContainer.tsx # Game canvas container
-├── games/                 # Game implementations
-│   ├── BaseGame.ts       # Base game class
-│   ├── GameRenderer.ts   # Game renderer
-│   ├── subway-surfers/   # Subway Surfers game
-│   │   ├── SubwaySurfersGame.ts
-│   │   └── assets/       # Game assets (models, textures, etc.)
-│   ├── squid-game/       # Squid Game
-│   │   ├── SquidGameGame.ts
-│   │   └── assets/       # Game assets
-│   ├── mario/            # Mario game
-│   │   ├── MarioGame.ts
-│   │   └── assets/       # Game assets
-│   └── pac-man/          # Pac-Man game
-│       ├── PacManGame.ts
-│       └── assets/       # Game assets
-├── lib/                   # Utilities
-│   └── games.ts          # Game metadata
-└── types/                 # TypeScript types
-    └── game.ts            # Game type definitions
-```
-
-## Getting Started
-
-### Installation
+## 🚀 Quick Start
 
 ```bash
 npm install
-```
-
-### Development
-
-```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Visit http://localhost:3000
 
-### Build
+## 🎯 Games
 
-```bash
-npm run build
-npm start
+### **Whack-A-Mole SAT**
+- 3D whack-a-mole with SAT questions
+- Hit the correct answer before time runs out!
+- Files: `games/whackamole/`, `components/WhackAMoleGameContainer.tsx`
+
+### **SAT Balloon Pop**
+- Carnival shooter with floating balloons
+- Shoot the balloon with the correct answer!
+- Files: `games/carnival/`, `components/CarnivalGameContainer.tsx`
+
+### **SAT Zombie Apocalypse** 🧟
+- First-person 3D shooter
+- Zombies labeled A, B, C, D - shoot the correct one!
+- WASD movement, mouse to look, click to shoot
+- Files: `games/zombie/`, `components/ZombieGameContainer.tsx`
+
+## 📁 Structure
+
+```
+frontend/
+├── app/
+│   ├── games/[gameId]/page.tsx  # Dynamic game route
+│   └── page.tsx                  # Home page
+├── components/
+│   ├── GameCard.tsx              # Game card
+│   ├── GameOverModal.tsx         # Reusable stats modal
+│   ├── WhackAMoleGameContainer.tsx
+│   ├── CarnivalGameContainer.tsx
+│   └── ZombieGameContainer.tsx
+├── games/
+│   ├── whackamole/
+│   │   ├── WhackAMoleGame.ts     # Three.js game engine
+│   │   ├── types.ts              # Interfaces
+│   │   └── questions.ts          # SAT questions
+│   ├── carnival/
+│   │   ├── CarnivalGame.ts
+│   │   ├── types.ts
+│   │   └── questions.ts
+│   └── zombie/
+│       ├── ZombieGame.ts         # FPS game engine
+│       ├── types.ts
+│       └── questions.ts
+└── lib/
+    └── games.ts                  # Game registry
 ```
 
-## Tech Stack
+## 🛠️ Tech Stack
 
-- **Next.js 14** - React framework
-- **TypeScript** - Type safety
-- **Three.js** - 3D graphics and game rendering
-- **HTML5 Canvas** - Canvas rendering (for placeholders)
+- **Next.js 14** (App Router)
+- **React 18**
+- **TypeScript**
+- **Three.js** - All games use 3D rendering
+- **Tailwind CSS**
 
-## Development Guidelines
+## 🎨 Adding a New Game
 
-### Adding a New Game
+1. Create folder: `games/your-game/`
+2. Create `YourGame.ts` with Three.js logic (Scene, Camera, Renderer)
+3. Create `YourGameContainer.tsx` React wrapper
+4. Add to `lib/games.ts` registry
 
-1. Create a new game folder in `games/[game-name]/`
-2. Create the game class file `[GameName]Game.ts` extending `BaseGame`
-3. Create an `assets/` folder for game assets (models, textures, sounds, etc.)
-4. Implement required methods: `init()`, `update()`, `render()`, `handleInput()`
-   - Use Three.js for 3D rendering (Scene, Camera, Renderer)
-   - Load assets from the `assets/` folder
-5. Register the game in `games/GameRenderer.ts`
-6. Add game metadata to `lib/games.ts`
+See existing games as templates!
 
-### Game Architecture
+---
 
-Each game extends `BaseGame` which provides:
-- Game state management
-- Common game properties (score, level, lives, etc.)
-- Abstract methods for game-specific logic
-
+**Built for NYU Hacks 2025! 🎓**
