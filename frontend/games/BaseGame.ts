@@ -5,6 +5,12 @@ import { gameAPI, SAT_Question, AnswerResponse } from '@/lib/api'
 /**
  * Base Game Class with API Integration
  * All games extend this class and use Three.js for 3D rendering.
+<<<<<<< HEAD
+=======
+ * 
+ * IMPORTANT: This file should NOT import any game implementations
+ * to avoid circular dependencies.
+>>>>>>> d863a3d7fda6963f8096b8436011c714958557a2
  */
 export abstract class BaseGame {
   protected state: GameState = {
@@ -25,12 +31,16 @@ export abstract class BaseGame {
   constructor(
     protected width: number,
     protected height: number,
+<<<<<<< HEAD
     protected canvas?: HTMLCanvasElement
+=======
+    protected canvas: HTMLCanvasElement
+>>>>>>> d863a3d7fda6963f8096b8436011c714958557a2
   ) {}
 
   abstract init(): void
   abstract update(deltaTime: number): void
-  abstract render(ctx: CanvasRenderingContext2D): void
+  abstract render(ctx: CanvasRenderingContext2D | null): void
   abstract handleInput(key: string): void
 
   /**
@@ -203,6 +213,7 @@ export abstract class BaseGame {
   protected setState(updates: Partial<GameState>): void {
     this.state = { ...this.state, ...updates }
   }
+<<<<<<< HEAD
 
   /**
    * Render question overlay (common across all games)
@@ -335,3 +346,25 @@ export abstract class BaseGame {
     }
   }
 }
+=======
+
+  // Public helpers for pause control
+  public pause(): void {
+    this.state.isPaused = true
+  }
+
+  public resume(): void {
+    this.state.isPaused = false
+  }
+
+  public togglePause(): void {
+    this.state.isPaused = !this.state.isPaused
+  }
+
+  public isPaused(): boolean {
+    return this.state.isPaused
+  }
+}
+
+// DO NOT add any exports or imports of game classes here!
+>>>>>>> d863a3d7fda6963f8096b8436011c714958557a2

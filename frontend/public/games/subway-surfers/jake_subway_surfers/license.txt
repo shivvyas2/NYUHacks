@@ -1,0 +1,11 @@
+Model Information:
+* title:	Jake Subway Surfers
+* source:	https://sketchfab.com/3d-models/jake-subway-surfers-50be24c8b2fe4628a401b339bb2e2958
+* author:	Raph3D (https://sketchfab.com/anndaniau)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Jake Subway Surfers" (https://sketchfab.com/3d-models/jake-subway-surfers-50be24c8b2fe4628a401b339bb2e2958) by Raph3D (https://sketchfab.com/anndaniau) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

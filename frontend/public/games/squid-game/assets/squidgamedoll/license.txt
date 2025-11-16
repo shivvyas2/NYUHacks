@@ -1,0 +1,11 @@
+Model Information:
+* title:	squidgamedoll
+* source:	https://sketchfab.com/3d-models/squidgamedoll-4d6eb3321a2e42d4be1c83a983825e8e
+* author:	exohakufu (https://sketchfab.com/exohakufu)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "squidgamedoll" (https://sketchfab.com/3d-models/squidgamedoll-4d6eb3321a2e42d4be1c83a983825e8e) by exohakufu (https://sketchfab.com/exohakufu) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

@@ -19,7 +19,8 @@ export class MarioGame extends BaseGame {
     // TODO: Update Three.js scene objects
   }
 
-  render(ctx: CanvasRenderingContext2D): void {
+  render(ctx: CanvasRenderingContext2D | null): void {
+    if (!ctx) return
     // Draw placeholder
     ctx.fillStyle = '#1a1a1a'
     ctx.fillRect(0, 0, this.width, this.height)

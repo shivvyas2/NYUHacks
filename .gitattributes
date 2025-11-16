@@ -1,0 +1,10 @@
+# Prevent accidental commits of sensitive files
+*.env filter=git-crypt diff=git-crypt
+*.env.local filter=git-crypt diff=git-crypt
+backend/.env filter=git-crypt diff=git-crypt
+frontend/.env.local filter=git-crypt diff=git-crypt
+
+# Ensure .env files are treated as binary to prevent accidental viewing
+*.env binary
+*.env.local binary
+
