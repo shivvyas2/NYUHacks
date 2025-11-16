@@ -47,16 +47,13 @@ export function AuthButton() {
 
   if (user) {
     return (
-      <div className="flex items-center gap-3">
-        <Link
-          href="/stats"
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold transition-colors"
-        >
-          📊 Stats
-        </Link>
+      <div className="w-full space-y-2">
+        <div className="px-3 py-2 text-sm text-gray-600 border-b border-gray-200">
+          <div className="font-medium text-gray-800">{user.email || 'User'}</div>
+        </div>
         <button
           onClick={handleLogout}
-          className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-bold transition-colors"
+          className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
         >
           Logout
         </button>
@@ -65,12 +62,20 @@ export function AuthButton() {
   }
 
   return (
-    <Link
-      href="/login"
-      className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-bold transition-colors"
-    >
-      Login
-    </Link>
+    <div className="w-full space-y-2">
+      <Link
+        href="/login"
+        className="block w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium text-center transition-colors"
+      >
+        Login
+      </Link>
+      <Link
+        href="/signup"
+        className="block w-full px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg text-sm font-medium text-center transition-colors"
+      >
+        Sign Up
+      </Link>
+    </div>
   )
 }
 

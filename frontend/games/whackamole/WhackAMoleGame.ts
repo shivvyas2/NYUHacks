@@ -17,7 +17,6 @@ export class WhackAMoleGame extends BaseGame {
   private scene!: THREE.Scene
   private camera!: THREE.PerspectiveCamera
   private renderer!: THREE.WebGLRenderer
-  private canvas: HTMLCanvasElement
   
   // Game objects
   private moles: Mole[] = []
@@ -41,8 +40,7 @@ export class WhackAMoleGame extends BaseGame {
   public onGameOver?: (analytics: GameAnalytics) => void
 
   constructor(width: number, height: number, canvas: HTMLCanvasElement) {
-    super(width, height)
-    this.canvas = canvas
+    super(width, height, canvas)
     this.questions = [...satQuestions]
     
     this.gameState = {
@@ -211,6 +209,11 @@ export class WhackAMoleGame extends BaseGame {
     const rect = this.canvas.getBoundingClientRect()
     this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
     this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
+  }
+
+  handleInput(key: string): void {
+    // WhackAMoleGame uses mouse input, not keyboard
+    // This method is required by BaseGame but not used
   }
 
   private handleClick(event: MouseEvent): void {

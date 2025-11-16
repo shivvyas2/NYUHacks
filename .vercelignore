@@ -1,5 +1,8 @@
 # Ignore files for Vercel deployment
 backend/
+backend/**
+*.py
+requirements.txt
 *.md
 .git/
 node_modules/
@@ -7,4 +10,9 @@ node_modules/
 .env.local
 *.log
 .DS_Store
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
 

@@ -14,6 +14,6 @@ export interface Game {
   id: string
   name: string
   description: string
-  status: string
+  status: 'coming-soon' | 'available'
 }
 

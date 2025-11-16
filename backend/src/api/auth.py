@@ -99,9 +99,9 @@ async def logout(
     db: Client = Depends(get_db)
 ):
     """Logout user"""
-    token = credentials.credentials
+    token = credentials.credentials if credentials else None
     auth_service = AuthService(db)
-    result = await auth_service.logout(token)
+    result = await auth_service.logout(token or "")
     
     if not result["success"]:
         raise HTTPException(status_code=400, detail=result.get("error", "Logout failed"))

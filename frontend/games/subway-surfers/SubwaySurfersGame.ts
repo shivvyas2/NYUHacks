@@ -1067,12 +1067,9 @@ export class SubwaySurfersGame extends BaseGame {
   }
 
   render(ctx: CanvasRenderingContext2D | null): void {
-    if (!ctx) return
-    const canvas = ctx.canvas
-
-    // Initialize Three.js on first render
+    // Initialize Three.js on first render using the main canvas
     if (!this.renderer) {
-      this.initializeThreeJS(canvas)
+      this.initializeThreeJS(this.canvas)
     }
 
     // Render Three.js scene
