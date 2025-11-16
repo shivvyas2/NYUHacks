@@ -22,7 +22,6 @@ export class CarnivalGame extends BaseGame {
   private scene!: THREE.Scene
   private camera!: THREE.PerspectiveCamera
   private renderer!: THREE.WebGLRenderer
-  private canvas: HTMLCanvasElement
   
   // Game objects
   private targets: Target[] = []
@@ -45,8 +44,7 @@ export class CarnivalGame extends BaseGame {
   public onGameOver?: (analytics: GameAnalytics) => void
 
   constructor(width: number, height: number, canvas: HTMLCanvasElement) {
-    super(width, height)
-    this.canvas = canvas
+    super(width, height, canvas)
     this.questions = [...satQuestions]
     
     this.gameState = {
@@ -115,10 +113,8 @@ export class CarnivalGame extends BaseGame {
     for (let i = 0; i < 8; i++) {
       const lightGeometry = new THREE.SphereGeometry(0.2, 16, 16)
       const lightColor = i % 2 === 0 ? 0xFFD700 : 0xFF1493
-      const lightMaterial = new THREE.MeshBasicMaterial({ 
-        color: lightColor,
-        emissive: lightColor,
-        emissiveIntensity: 1
+      const lightMaterial = new THREE.MeshBasicMaterial({
+        color: lightColor
       })
       const light = new THREE.Mesh(lightGeometry, lightMaterial)
       light.position.set(-6 + i * 1.7, 6.5, -4.8)
@@ -183,8 +179,7 @@ export class CarnivalGame extends BaseGame {
       color: targetColor,
       shininess: 150,
       specular: 0xffffff,
-      emissive: targetColor,
-      emissiveIntensity: 0.2 // Make balloons glow slightly
+      // MeshBasicMaterial doesn't support emissive
     })
     const balloon = new THREE.Mesh(balloonGeometry, balloonMaterial)
     balloon.scale.y = 1.2 // Make it more balloon-shaped
@@ -249,6 +244,11 @@ export class CarnivalGame extends BaseGame {
     this.scene.add(this.camera)
   }
 
+  handleInput(key: string): void {
+    // CarnivalGame uses mouse input, not keyboard
+    // This method is required by BaseGame but not used
+  }
+
   private handleMouseMove(event: MouseEvent): void {
     const rect = this.canvas.getBoundingClientRect()
     this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
@@ -306,10 +306,8 @@ export class CarnivalGame extends BaseGame {
   private shootBullet(): void {
     // Make bullets more visible - bright glowing spheres
     const bulletGeometry = new THREE.SphereGeometry(0.1, 16, 16)
-    const bulletMaterial = new THREE.MeshBasicMaterial({ 
-      color: 0xFFFF00,
-      emissive: 0xFFFF00,
-      emissiveIntensity: 1
+    const bulletMaterial = new THREE.MeshBasicMaterial({
+      color: 0xFFFF00
     })
     const bulletMesh = new THREE.Mesh(bulletGeometry, bulletMaterial)
     

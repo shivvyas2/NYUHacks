@@ -343,10 +343,8 @@ export class ZombieGame {
       // Add label/warning stickers on some boxes
       if (Math.random() > 0.5) {
         const labelGeometry = new THREE.PlaneGeometry(0.5, 0.5)
-        const labelMaterial = new THREE.MeshBasicMaterial({ 
-          color: 0xff0000,
-          emissive: 0xff0000,
-          emissiveIntensity: 0.5
+        const labelMaterial = new THREE.MeshBasicMaterial({
+          color: 0xff0000
         })
         const label = new THREE.Mesh(labelGeometry, labelMaterial)
         label.position.set(pos.x, boxSize, pos.z)
@@ -382,8 +380,6 @@ export class ZombieGame {
     // Warning signs on walls - BRIGHT
     const signMaterial = new THREE.MeshBasicMaterial({ 
       color: 0xffff00,
-      emissive: 0xffff00,
-      emissiveIntensity: 1.0
     })
     
     const sign1 = new THREE.Mesh(new THREE.PlaneGeometry(2, 1), signMaterial)
@@ -430,8 +426,6 @@ export class ZombieGame {
     const bodyMaterial = new THREE.MeshStandardMaterial({ 
       color: 0x5a6a5a, // Gray-green - same for all zombies
       roughness: 0.8,
-      emissive: 0x2a3a2a,
-      emissiveIntensity: 0.3
     })
     const body = new THREE.Mesh(bodyGeometry, bodyMaterial)
     body.position.y = 1
@@ -453,8 +447,6 @@ export class ZombieGame {
     const eyeGeometry = new THREE.SphereGeometry(0.1, 8, 8)
     const eyeMaterial = new THREE.MeshBasicMaterial({ 
       color: 0xff0000,
-      emissive: 0xff0000,
-      emissiveIntensity: 2
     })
     const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial)
     leftEye.position.set(-0.2, 2.5, 0.35)

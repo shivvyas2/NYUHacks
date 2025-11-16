@@ -9,9 +9,6 @@
       "source": "/api/:path*",
       "destination": "https://your-backend-url.railway.app/api/:path*"
     }
-  ],
-  "env": {
-    "NEXT_PUBLIC_API_URL": "@api_url"
-  }
+  ]
 }
 

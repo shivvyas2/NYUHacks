@@ -9,7 +9,8 @@ import ZombieGameContainer from './ZombieGameContainer'
 interface GameContainerProps {
   game: {
     id: string
-    title: string
+    name?: string
+    title?: string
   }
 }
 

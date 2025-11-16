@@ -181,11 +181,11 @@ export class GameRenderer {
 
     // Render game
     if (this.gameId === 'squid-game') {
-      // Three.js games handle their own rendering
-      this.game.render(null as any) // Pass null, game handles Three.js rendering
+      // Pass overlay 2D context so the game can draw UI over Three.js scene
+      this.game.render(this.ctx as any)
     } else if (this.gameId === 'subway-surfers') {
-      // Subway-surfers handles its own Three.js rendering
-      this.game.render(null as any) // Pass null, game handles Three.js rendering
+      // Pass overlay context for any 2D HUD the game may draw
+      this.game.render(this.ctx as any)
     } else if (this.ctx) {
       this.game.render(this.ctx)
     }

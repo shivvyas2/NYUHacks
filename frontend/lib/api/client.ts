@@ -38,9 +38,9 @@ class ApiClient {
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`
     
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...(options.headers as Record<string, string> || {}),
     }
 
     // Add auth token if available
@@ -77,11 +77,18 @@ class ApiClient {
   }
 
   // Authentication endpoints
-  async signup(email: string, password: string) {
-    return this.request('/api/auth/signup', {
+  async signup(email: string, password: string): Promise<{ success: boolean; error?: string; access_token?: string; user?: any }> {
+    const response = await this.request<{ success: boolean; error?: string; access_token?: string; user?: any }>('/api/auth/signup', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     })
+    
+    // If access token is returned (email confirmation disabled), store it
+    if (response.access_token) {
+      this.setToken(response.access_token)
+    }
+    
+    return response
   }
 
   async login(email: string, password: string) {
@@ -125,12 +132,23 @@ class ApiClient {
   }
 
   // Statistics endpoints
-  async getUserStats() {
-    return this.request('/api/stats/user')
+  async getUserStats(): Promise<any | null> {
+    try {
+      const result = await this.request<any>('/api/stats/user')
+      // Return null if result is empty object
+      return result && Object.keys(result).length > 0 ? result : null
+    } catch (error) {
+      return null
+    }
   }
 
-  async getRecentSessions(limit: number = 10) {
-    return this.request(`/api/stats/sessions?limit=${limit}`)
+  async getRecentSessions(limit: number = 10): Promise<any[]> {
+    try {
+      const result = await this.request<any[]>(`/api/stats/sessions?limit=${limit}`)
+      return Array.isArray(result) ? result : []
+    } catch (error) {
+      return []
+    }
   }
 
   // Question endpoints

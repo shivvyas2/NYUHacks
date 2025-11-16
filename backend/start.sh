@@ -1,45 +1,41 @@
 #!/bin/bash
 
-# Simple FastAPI startup script - uses system Python3
-
-echo "🚀 Starting FastAPI Backend..."
+echo "🚀 Starting SAT Learning Agent Backend..."
 echo ""
 
-# Use python3 directly
-PYTHON=python3
-
-# Check if Python3 is available
-if ! command -v $PYTHON &> /dev/null; then
-    echo "❌ Error: python3 not found. Please install Python 3.8 or higher."
+# Check for Python
+if ! command -v python3 &> /dev/null; then
+    echo "❌ Python 3 not found. Please install Python 3.8+."
     exit 1
 fi
 
-echo "✅ Using: $($PYTHON --version)"
+echo "✅ Python found: $(python3 --version)"
+
+# Check for API key in config
 echo ""
+echo "🔑 Checking API configuration..."
+python3 -c "from config import OPENROUTER_API_KEY; print('✅ OpenRouter API key configured!' if OPENROUTER_API_KEY else '❌ No API key found')"
 
-# Check if dependencies are installed
-if ! $PYTHON -c "import fastapi" 2>/dev/null; then
-    echo "📦 Installing dependencies..."
-    $PYTHON -m pip install -r requirements.txt
-    echo ""
-fi
+# Check for dependencies
+echo ""
+echo "📦 Checking dependencies..."
 
-# Verify FastAPI is installed
-if ! $PYTHON -c "import fastapi" 2>/dev/null; then
-    echo "❌ Error: FastAPI installation failed."
-    echo "   Please run manually: python3 -m pip install -r requirements.txt"
+if ! python3 -c "import fastapi" 2>/dev/null; then
+    echo "❌ Dependencies not installed."
+    echo "   Run: pip install -r requirements.txt"
     exit 1
 fi
 
-echo "✅ Dependencies ready"
+echo "✅ Dependencies installed"
+
+# Start server
 echo ""
-echo "🌐 Starting server on http://localhost:8000"
-echo "📚 API docs: http://localhost:8000/docs"
+echo "🎮 Starting server on http://localhost:8000"
+echo "📚 API docs at http://localhost:8000/docs"
 echo ""
-echo "Press Ctrl+C to stop the server"
+echo "Press Ctrl+C to stop"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
-# Run the server
-cd "$(dirname "$0")"
-$PYTHON src/main.py
+python3 main.py
 

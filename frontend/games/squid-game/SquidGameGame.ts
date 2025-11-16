@@ -57,6 +57,11 @@ export class SquidGameGame extends BaseGame {
   private player!: PlayerEntity
   private doll!: DollEntity
   private enemies: EnemyEntity[] = []
+  private enemyRelativeOffsets: Map<EnemyEntity, { x: number; y: number; z: number }> = new Map()
+  private redSoldiers: THREE.Object3D[] = []
+  private redSoldierOffsets: Array<{ x: number; y: number; z: number }> = []
+  private redSoldierMixers: THREE.AnimationMixer[] = []
+  private redSoldierShootActions: (THREE.AnimationAction | undefined)[] = []
   private controls!: any
   private assetsLoaded = false
   private loadingProgress = 0
@@ -66,13 +71,31 @@ export class SquidGameGame extends BaseGame {
   private animationFrameId: number | null = null
   
   // Question system
-  private currentQuestion: any = null
+  private questions: Array<{ id?: number; question: string; options: string[]; correctAnswer: number; explanation?: string }> = []
+  private currentQuestion: { id?: number; question: string; options: string[]; correctAnswer: number; explanation?: string } | null = null
+  private currentQuestionIndex = 0
   private questionsAnswered = 0
   private correctAnswers = 0
   private wrongAnswers = 0
   private maxWrongAnswers = 5
   private totalQuestions = 20
   private showQuestionOverlay = false
+  
+  // Red light/question timing control
+  private redLightStartedAt: number | null = null
+  private requestResetStateChange = false
+  // Green light sound timing control
+  private greenStartedAt: number | null = null
+  private greenMinDurationMs: number = 0
+  private greenHoldUntilMs: number | null = null
+  // Audio guards
+  private redAudioPlayedForThisCycle: boolean = false
+  private cocomaPlayedForThisCycle: boolean = false
+  private lastRedLightPlayAt: number = 0
+  private lastCocomaPlayAt: number = 0
+  private audioMinIntervalMs: number = 1500
+  // Feature flag to completely disable voice lines while debugging duplicates
+  private voiceLinesEnabled: boolean = false
   
   // Audio
   private audioListener!: THREE.AudioListener
@@ -163,6 +186,11 @@ export class SquidGameGame extends BaseGame {
     this.loadingMessage = 'Loading audio...'
     await this.loadAudio()
 
+    // Load question data (use shared public/questions.json)
+    this.loadingProgress = 25
+    this.loadingMessage = 'Loading questions...'
+    await this.loadQuestions()
+
     // Load models
     this.loadingProgress = 30
     this.loadingMessage = 'Loading models...'
@@ -174,6 +202,44 @@ export class SquidGameGame extends BaseGame {
     this.assetsLoaded = true
     this.loadingProgress = 100
     this.loadingMessage = 'Ready!'
+  }
+
+  private async loadQuestions(): Promise<void> {
+    try {
+      // Prefer game-specific questions if present, else fallback to shared public/questions.json
+      // Attempt game-specific first
+      const response = await fetch('/games/squid-game/questions.json', { cache: 'no-store' })
+      if (response.ok) {
+        const data = await response.json()
+        this.questions = (data.questions || []).map((q: any) => ({
+          id: q.id,
+          question: q.question,
+          options: q.options,
+          correctAnswer: typeof q.correctAnswer === 'number' ? q.correctAnswer : q.answer,
+          explanation: q.explanation
+        }))
+      } else {
+        // Fallback
+        const shared = await fetch('/questions.json', { cache: 'no-store' })
+        const data = await shared.json()
+        this.questions = (data.questions || []).map((q: any) => ({
+          id: q.id,
+          question: q.question,
+          options: q.options,
+          correctAnswer: typeof q.correctAnswer === 'number' ? q.correctAnswer : q.answer,
+          explanation: q.explanation
+        }))
+      }
+    } catch {
+      // Final fallback to a tiny built-in set to avoid breaking the game
+      this.questions = [
+        { question: 'What is 2 + 2?', options: ['3', '4', '5', '6'], correctAnswer: 1 },
+        { question: 'Capital of France?', options: ['London', 'Berlin', 'Paris', 'Madrid'], correctAnswer: 2 }
+      ]
+    } finally {
+      // Set total questions to available pool or cap at 20
+      this.totalQuestions = Math.min(this.totalQuestions, this.questions.length || this.totalQuestions)
+    }
   }
 
   async loadAudio(): Promise<void> {
@@ -228,113 +294,14 @@ export class SquidGameGame extends BaseGame {
     this.loadingProgress = 80
   }
 
-  // Generate placeholder questions (will be replaced with AI-generated JSON in future)
-  generateQuestion(): any {
-    const questions = [
-      {
-        question: 'What is 2 + 2?',
-        options: ['3', '4', '5', '6'],
-        correctAnswer: 1
-      },
-      {
-        question: 'What is the capital of France?',
-        options: ['London', 'Berlin', 'Paris', 'Madrid'],
-        correctAnswer: 2
-      },
-      {
-        question: 'What is 5 × 3?',
-        options: ['10', '15', '20', '25'],
-        correctAnswer: 1
-      },
-      {
-        question: 'What is the largest planet in our solar system?',
-        options: ['Earth', 'Mars', 'Jupiter', 'Saturn'],
-        correctAnswer: 2
-      },
-      {
-        question: 'What is 10 - 4?',
-        options: ['4', '5', '6', '7'],
-        correctAnswer: 2
-      },
-      {
-        question: 'What is the chemical symbol for water?',
-        options: ['H2O', 'CO2', 'O2', 'NaCl'],
-        correctAnswer: 0
-      },
-      {
-        question: 'What is 8 ÷ 2?',
-        options: ['2', '3', '4', '5'],
-        correctAnswer: 2
-      },
-      {
-        question: 'What is the smallest prime number?',
-        options: ['0', '1', '2', '3'],
-        correctAnswer: 2
-      },
-      {
-        question: 'What is 3²?',
-        options: ['6', '9', '12', '15'],
-        correctAnswer: 1
-      },
-      {
-        question: 'What is the square root of 16?',
-        options: ['2', '4', '6', '8'],
-        correctAnswer: 1
-      },
-      {
-        question: 'What is 7 + 8?',
-        options: ['13', '14', '15', '16'],
-        correctAnswer: 2
-      },
-      {
-        question: 'What is the capital of Japan?',
-        options: ['Seoul', 'Beijing', 'Tokyo', 'Bangkok'],
-        correctAnswer: 2
-      },
-      {
-        question: 'What is 12 ÷ 3?',
-        options: ['2', '3', '4', '5'],
-        correctAnswer: 2
-      },
-      {
-        question: 'What is the speed of light in vacuum?',
-        options: ['300,000 km/s', '150,000 km/s', '450,000 km/s', '600,000 km/s'],
-        correctAnswer: 0
-      },
-      {
-        question: 'What is 4 × 5?',
-        options: ['15', '20', '25', '30'],
-        correctAnswer: 1
-      },
-      {
-        question: 'What is the largest ocean?',
-        options: ['Atlantic', 'Indian', 'Arctic', 'Pacific'],
-        correctAnswer: 3
-      },
-      {
-        question: 'What is 9 - 3?',
-        options: ['4', '5', '6', '7'],
-        correctAnswer: 2
-      },
-      {
-        question: 'What is 6²?',
-        options: ['30', '36', '42', '48'],
-        correctAnswer: 1
-      },
-      {
-        question: 'What is the capital of Australia?',
-        options: ['Sydney', 'Melbourne', 'Canberra', 'Perth'],
-        correctAnswer: 2
-      },
-      {
-        question: 'What is 15 ÷ 5?',
-        options: ['2', '3', '4', '5'],
-        correctAnswer: 1
-      }
-    ]
-
-    // Return a random question
-    return questions[Math.floor(Math.random() * questions.length)]
+  // Advance to next question in pool
+  private nextQuestion(): void {
+    if (!this.questions || this.questions.length === 0) {
+      this.currentQuestion = null
+      return
+    }
+    this.currentQuestion = this.questions[this.currentQuestionIndex % this.questions.length]
+    this.currentQuestionIndex++
   }
 
   async addPlayer(): Promise<void> {
@@ -808,9 +775,9 @@ export class SquidGameGame extends BaseGame {
           const mixer = new THREE.AnimationMixer(renderComponent)
           const animations = new Map()
           
-          // Load Shooting Gun.fbx animation for the doll
+          // Load redmanshooting.fbx animation for the doll
           fbxLoader.load(
-            '/games/squid-game/assets/Shooting Gun.fbx',
+            '/games/squid-game/assets/redmanshooting.fbx',
             (fbx) => {
               if (fbx.animations && fbx.animations.length > 0) {
                 const clip = fbx.animations[0]
@@ -853,7 +820,7 @@ export class SquidGameGame extends BaseGame {
             },
             undefined,
             (error) => {
-              console.warn('Failed to load Shooting Gun.fbx:', error)
+              console.warn('Failed to load redmanshooting.fbx:', error)
               // Continue without shooting animation
               this.doll = new YUKA.GameEntity() as DollEntity
               this.doll.mixer = mixer
@@ -892,6 +859,7 @@ export class SquidGameGame extends BaseGame {
 
     // Green Light State
     const greenLightState = new YUKA.State()
+    greenLightState.id = DOLL_STATES.GREEN_LIGHT
     greenLightState.enter = () => {
       // Doll faces away from players (original: Vector3(0, 0, -100))
       ;(this.doll as any).rotateTo(new YUKA.Vector3(0, 0, -100), 1)
@@ -907,30 +875,46 @@ export class SquidGameGame extends BaseGame {
       // Hide question overlay
       this.showQuestionOverlay = false
       this.currentQuestion = null
+      this.redLightStartedAt = null
+      // Track green start for enforcing audio completion
+      this.greenStartedAt = Date.now()
+      // Try to derive "green phase" duration from cocoma audio instead of green voice line
+      const bufferDurationSec =
+        (this.cocomaAudio && (this.cocomaAudio as any).buffer && (this.cocomaAudio as any).buffer.duration) ||
+        0
+      this.greenMinDurationMs = Math.max(0, Math.floor(bufferDurationSec * 1000))
+      // Set a hold window: play duration + random 1–5s before red can start
+      const randomDelayMs = (1 + Math.floor(Math.random() * 5)) * 1000
+      this.greenHoldUntilMs = (this.greenStartedAt || Date.now()) + this.greenMinDurationMs + randomDelayMs
       
+      // Reset red audio guard for the next red cycle
+      this.redAudioPlayedForThisCycle = false
       // Stop red light audio if playing
       if (this.redLightAudio && this.redLightAudio.isPlaying) {
         this.redLightAudio.stop()
       }
       
-      // Play green light audio
-      if (this.greenLightAudio && !this.greenLightAudio.isPlaying) {
-        this.greenLightAudio.play()
+      // Do NOT say "Green Light"; just play cocoma during green
+      if (this.greenLightAudio && this.greenLightAudio.isPlaying) {
+        this.greenLightAudio.stop()
       }
-      
-      // Play cocoma audio after green light starts
-      if (this.cocomaAudio && !this.cocomaAudio.isPlaying) {
-        setTimeout(() => {
-          if (this.cocomaAudio && !this.cocomaAudio.isPlaying) {
-            this.cocomaAudio.play()
-          }
-        }, 500)
+      // Always play cocoma when green starts (independent of voiceLinesEnabled)
+      if (this.cocomaAudio && !this.cocomaPlayedForThisCycle) {
+        const now = Date.now()
+        if (now - this.lastCocomaPlayAt >= this.audioMinIntervalMs) {
+          try { if (this.cocomaAudio.isPlaying) this.cocomaAudio.stop() } catch {}
+          try { (this.cocomaAudio as any).offset = 0 } catch {}
+          this.cocomaAudio.play()
+          this.cocomaPlayedForThisCycle = true
+          this.lastCocomaPlayAt = now
+        }
       }
     }
     this.doll.stateMachine.add(DOLL_STATES.GREEN_LIGHT, greenLightState)
 
     // Red Light State  
     const redLightState = new YUKA.State()
+    redLightState.id = DOLL_STATES.RED_LIGHT
     redLightState.enter = () => {
       // Doll faces players (looking at them) - slight random direction for fun
       const lookDirection = new YUKA.Vector3(
@@ -955,15 +939,26 @@ export class SquidGameGame extends BaseGame {
       if (this.cocomaAudio && this.cocomaAudio.isPlaying) {
         this.cocomaAudio.stop()
       }
+      // Reset cocoma guard on red start, so next green plays it once
+      this.cocomaPlayedForThisCycle = false
       
-      // Play red light audio
-      if (this.redLightAudio && !this.redLightAudio.isPlaying) {
-        this.redLightAudio.play()
+      // Show question overlay right when the doll has turned (same frame) and play audio once
+      // Guard against multiple triggers.
+      this.redLightStartedAt = Date.now()
+      if (!this.showQuestionOverlay) {
+        if (this.voiceLinesEnabled && this.redLightAudio && !this.redAudioPlayedForThisCycle) {
+          const now = Date.now()
+          if (now - this.lastRedLightPlayAt >= this.audioMinIntervalMs) {
+            try { if (this.redLightAudio.isPlaying) this.redLightAudio.stop() } catch {}
+            try { (this.redLightAudio as any).offset = 0 } catch {}
+            this.redLightAudio.play()
+            this.redAudioPlayedForThisCycle = true
+            this.lastRedLightPlayAt = now
+          }
+        }
+        this.nextQuestion()
+        this.showQuestionOverlay = true
       }
-      
-      // Show question overlay
-      this.currentQuestion = this.generateQuestion()
-      this.showQuestionOverlay = true
       
       // Reset movement check timer
       ;(this.doll as any).lastMovementCheck = Date.now()
@@ -1019,6 +1014,18 @@ export class SquidGameGame extends BaseGame {
         enemy.stateMachine.changeTo(ENEMY_STATES.SHOOTING)
       }
     })
+    // Play shooting on anchored FBX red men (if clip is ready)
+    for (let i = 0; i < this.redSoldierShootActions.length; i++) {
+      const action = this.redSoldierShootActions[i]
+      if (action) {
+        try {
+          action.reset()
+          action.enabled = true
+          action.setEffectiveWeight(1.0)
+          action.play()
+        } catch {}
+      }
+    }
   }
 
   setDollEyeColor(color: number): void {
@@ -1167,25 +1174,137 @@ export class SquidGameGame extends BaseGame {
   }
 
   async addEnemies(): Promise<void> {
-    // Add enemies positioned ahead of doll (closer to player) so doll is at the end
+    // Place enemies next to the doll (relative to doll position) and keep them attached
+    const dollPos = (this.doll as any)?.position ?? new YUKA.Vector3(0, 0, -52)
     const enemyPositions = [
-      { x: 3, y: 0, z: -30 },   // Right side, ahead of doll
-      { x: -3, y: 0, z: -30 },  // Left side, ahead of doll
-      { x: 6, y: 0, z: -28 },   // Further right, ahead of doll
-      { x: -6, y: 0, z: -28 },  // Further left, ahead of doll
+      { x: dollPos.x + 3, y: dollPos.y, z: dollPos.z },    // Right side of doll
+      { x: dollPos.x - 3, y: dollPos.y, z: dollPos.z },    // Left side of doll
+      { x: dollPos.x + 6, y: dollPos.y, z: dollPos.z },    // Further right
+      { x: dollPos.x - 6, y: dollPos.y, z: dollPos.z },    // Further left
     ]
 
     const promises = enemyPositions.map((pos) => this.addEnemy(pos.x, pos.y, pos.z))
     await Promise.all(promises)
+    // Store relative offsets so enemies stay beside the doll
+    this.enemies.forEach((enemy) => {
+      const offset = {
+        x: enemy.position.x - dollPos.x,
+        y: enemy.position.y - dollPos.y,
+        z: enemy.position.z - dollPos.z,
+      }
+      this.enemyRelativeOffsets.set(enemy, offset)
+    })
+
+    // Also place a detailed red soldier model (GLTF) next to the doll
+    // Slightly in front-right of the doll
+    await this.addRedSoldierModel({ x: 2.2, y: 0, z: 0.2 })
+    // Add FBX red man standing model to the right of the doll
+    await this.addRedManStanding({ x: 3.0, y: 0, z: 0.0 })
+  }
+
+  private async addRedSoldierModel(relativeOffset: { x: number; y: number; z: number }): Promise<void> {
+    const gltfLoader = new GLTFLoader()
+    const dollPos = (this.doll as any)?.position ?? new YUKA.Vector3(0, 0, -52)
+    return new Promise<void>((resolve) => {
+      gltfLoader.load(
+        '/games/squid-game/assets/red_guy/scene.gltf',
+        (gltf) => {
+          const soldier = gltf.scene
+          // Tweak scale for this model (tiny)
+          soldier.scale.set(0.04, 0.04, 0.04)
+          soldier.traverse((child: any) => {
+            if (child.isMesh) {
+              child.castShadow = true
+              child.receiveShadow = true
+            }
+          })
+          // Place relative to doll
+          soldier.position.set(
+            dollPos.x + relativeOffset.x,
+            dollPos.y + relativeOffset.y,
+            dollPos.z + relativeOffset.z
+          )
+          soldier.lookAt(0, 0, 50)
+          this.scene.add(soldier)
+          this.redSoldiers.push(soldier)
+          this.redSoldierOffsets.push({ ...relativeOffset })
+          resolve()
+        },
+        undefined,
+        () => resolve()
+      )
+    })
+  }
+
+  private async addRedManStanding(relativeOffset: { x: number; y: number; z: number }): Promise<void> {
+    const fbxLoader = new FBXLoader()
+    const dollPos = (this.doll as any)?.position ?? new YUKA.Vector3(0, 0, -52)
+    return new Promise<void>((resolve) => {
+      fbxLoader.load(
+        '/games/squid-game/assets/redmanstanding.fbx',
+        (fbx) => {
+          const soldier = fbx as unknown as THREE.Object3D
+          // Scale FBX for scene
+          soldier.scale.set(0.05, 0.05, 0.05)
+          soldier.traverse((child: any) => {
+            if (child.isMesh) {
+              child.castShadow = true
+              child.receiveShadow = true
+            }
+          })
+          soldier.position.set(
+            dollPos.x + relativeOffset.x,
+            dollPos.y + relativeOffset.y,
+            dollPos.z + relativeOffset.z
+          )
+          soldier.lookAt(0, 0, 50)
+          this.scene.add(soldier)
+          // Reuse anchor arrays to keep in sync with doll
+          this.redSoldiers.push(soldier)
+          this.redSoldierOffsets.push({ ...relativeOffset })
+          // Prepare a mixer and bind a shooting clip from redmanshooting.fbx
+          const mixer = new THREE.AnimationMixer(soldier)
+          this.redSoldierMixers.push(mixer)
+          fbxLoader.load(
+            '/games/squid-game/assets/redmanshooting.fbx',
+            (shootFbx) => {
+              if (shootFbx.animations && shootFbx.animations.length > 0) {
+                try {
+                  const clip = shootFbx.animations[0]
+                  const action = mixer.clipAction(clip, soldier)
+                  action.setLoop(THREE.LoopOnce, 1)
+                  action.enabled = false
+                  action.clampWhenFinished = true
+                  action.setEffectiveWeight(1.0)
+                  this.redSoldierShootActions.push(action)
+                } catch {
+                  this.redSoldierShootActions.push(undefined)
+                }
+              } else {
+                this.redSoldierShootActions.push(undefined)
+              }
+              resolve()
+            },
+            undefined,
+            () => {
+              this.redSoldierShootActions.push(undefined)
+              resolve()
+            }
+          )
+        },
+        undefined,
+        () => resolve()
+      )
+    })
   }
 
   async addEnemy(x: number, y: number, z: number): Promise<void> {
     const fbxLoader = new FBXLoader()
     
     return new Promise((resolve, reject) => {
-      // Load Standing Idle.fbx as the base model for enemies
+      // Load redmanstanding.fbx as the base model for enemies
       fbxLoader.load(
-        '/games/squid-game/assets/Standing Idle.fbx',
+        '/games/squid-game/assets/redmanstanding.fbx',
         (fbx) => {
           const renderComponent = fbx
           // Make enemies much larger - scale up significantly compared to player
@@ -1212,12 +1331,12 @@ export class SquidGameGame extends BaseGame {
             action.setEffectiveWeight(1.0)
             action.play()
             animations.set(ENEMY_STATES.IDLE, action)
-            console.log('Loaded IDLE animation for enemy from Standing Idle.fbx')
+            console.log('Loaded IDLE animation for enemy from redmanstanding.fbx')
           }
           
-          // Load Shooting Gun.fbx animation
+          // Load redmanshooting.fbx animation
           fbxLoader.load(
-            '/games/squid-game/assets/Shooting Gun.fbx',
+            '/games/squid-game/assets/redmanshooting.fbx',
             (shootFbx) => {
               if (shootFbx.animations && shootFbx.animations.length > 0) {
                 const clip = shootFbx.animations[0]
@@ -1228,7 +1347,7 @@ export class SquidGameGame extends BaseGame {
                   action.setEffectiveWeight(0)
                   action.clampWhenFinished = true
                   animations.set(ENEMY_STATES.SHOOTING, action)
-                  console.log('Loaded SHOOTING animation for enemy from Shooting Gun.fbx')
+                  console.log('Loaded SHOOTING animation for enemy from redmanshooting.fbx')
                 } catch (error) {
                   console.warn('Failed to apply shooting animation to enemy:', error)
                 }
@@ -1253,11 +1372,20 @@ export class SquidGameGame extends BaseGame {
               
               this.entityManager.add(enemy)
               this.enemies.push(enemy)
+              // Save relative offset to doll so enemy stays beside the doll
+              if (this.doll) {
+                const dollPosNow = (this.doll as any).position
+                this.enemyRelativeOffsets.set(enemy, {
+                  x: enemy.position.x - dollPosNow.x,
+                  y: enemy.position.y - dollPosNow.y,
+                  z: enemy.position.z - dollPosNow.z,
+                })
+              }
               resolve()
             },
             undefined,
             (error) => {
-              console.warn('Failed to load Shooting Gun.fbx for enemy:', error)
+              console.warn('Failed to load redmanshooting.fbx for enemy:', error)
               // Continue without shooting animation
               const enemy = new YUKA.GameEntity() as EnemyEntity
               enemy.mixer = mixer
@@ -1273,6 +1401,14 @@ export class SquidGameGame extends BaseGame {
               this.setupEnemyStateMachine(enemy)
               this.entityManager.add(enemy)
               this.enemies.push(enemy)
+              if (this.doll) {
+                const dollPosNow = (this.doll as any).position
+                this.enemyRelativeOffsets.set(enemy, {
+                  x: enemy.position.x - dollPosNow.x,
+                  y: enemy.position.y - dollPosNow.y,
+                  z: enemy.position.z - dollPosNow.z,
+                })
+              }
               resolve()
             }
           )
@@ -1487,6 +1623,10 @@ export class SquidGameGame extends BaseGame {
 
   startGameLogic(): void {
     this.gameStarted = true
+    // Reset question flow to start from the first question on a new run
+    this.currentQuestionIndex = 0
+    this.currentQuestion = null
+    this.showQuestionOverlay = false
     this.startTimer()
     
     // Activate NPC behaviors
@@ -1508,7 +1648,8 @@ export class SquidGameGame extends BaseGame {
     this.doll.timer = timer
     // Track state change timing using seconds (simpler and more reliable)
     let stateChangeCounter = 0
-    let nextStateChangeDelay = 3 + Math.floor(Math.random() * 3) // Random 3-5 seconds
+    // First switch to red should happen within 1-5 seconds
+    let nextStateChangeDelay = 1 + Math.floor(Math.random() * 5) // 1-5 seconds
 
     this.timerInterval = setInterval(() => {
       timer--
@@ -1518,18 +1659,39 @@ export class SquidGameGame extends BaseGame {
       // Random timing for doll state changes (makes game more fun and unpredictable)
       const currentDollState = this.doll.stateMachine.currentState?.id
       
-      // Randomly switch states based on counter
+      // Allow external reset after answer
+      if (this.requestResetStateChange) {
+        stateChangeCounter = 0
+        nextStateChangeDelay = 1 + Math.floor(Math.random() * 5)
+        this.requestResetStateChange = false
+      }
+      
+      // Randomly switch states with rules:
+      // - During GREEN: wait until green sound fully finishes, then add random 1–5s
+      // - During RED: minimum 10s and wait for answer
       if (stateChangeCounter >= nextStateChangeDelay) {
         if (currentDollState === DOLL_STATES.GREEN_LIGHT) {
-          this.doll.stateMachine.changeTo(DOLL_STATES.RED_LIGHT)
-          stateChangeCounter = 0
-          // Random delay for next state change (2-5 seconds)
-          nextStateChangeDelay = 2 + Math.floor(Math.random() * 4)
+          const now = Date.now()
+          // Ensure green sound has completed AND the post-sound random delay elapsed
+          if (this.greenHoldUntilMs !== null && now >= this.greenHoldUntilMs) {
+            this.doll.stateMachine.changeTo(DOLL_STATES.RED_LIGHT)
+            stateChangeCounter = 0
+            nextStateChangeDelay = 1 // check red constraints every second
+          } else {
+            // Wait until audio is done; check again next second
+            nextStateChangeDelay = 1
+          }
         } else if (currentDollState === DOLL_STATES.RED_LIGHT) {
-          this.doll.stateMachine.changeTo(DOLL_STATES.GREEN_LIGHT)
-          stateChangeCounter = 0
-          // Random delay for next state change (3-6 seconds)
-          nextStateChangeDelay = 3 + Math.floor(Math.random() * 4)
+          const redElapsed = this.redLightStartedAt ? Date.now() - this.redLightStartedAt : 0
+          const minRedMs = 10000
+          if (redElapsed >= minRedMs && !this.showQuestionOverlay) {
+            this.doll.stateMachine.changeTo(DOLL_STATES.GREEN_LIGHT)
+            stateChangeCounter = 0
+            nextStateChangeDelay = 1 + Math.floor(Math.random() * 5)
+          } else {
+            // Keep red, check again next second
+            nextStateChangeDelay = 1
+          }
         }
       }
       
@@ -1656,6 +1818,12 @@ export class SquidGameGame extends BaseGame {
 
     // Sync enemy render components
     this.enemies.forEach((enemy) => {
+      // Keep enemy anchored relative to the doll each frame
+      if (this.doll && this.enemyRelativeOffsets.has(enemy)) {
+        const base = (this.doll as any).position
+        const off = this.enemyRelativeOffsets.get(enemy)!
+        enemy.position.set(base.x + off.x, base.y + off.y, base.z + off.z)
+      }
       const renderComponent = (enemy as any)._renderComponent
       if (renderComponent) {
         if (enemy.worldMatrix) {
@@ -1672,6 +1840,18 @@ export class SquidGameGame extends BaseGame {
         }
       }
     })
+
+    // Keep GLTF red soldier(s) anchored next to the doll
+    if (this.doll && this.redSoldiers.length) {
+      const base = (this.doll as any).position
+      for (let i = 0; i < this.redSoldiers.length; i++) {
+        const obj = this.redSoldiers[i]
+        const off = this.redSoldierOffsets[i]
+        obj.position.set(base.x + off.x, base.y + off.y, base.z + off.z)
+        obj.lookAt(0, 0, 50)
+        obj.updateMatrixWorld()
+      }
+    }
 
     // Update doll scale based on player distance for perspective effect
     if (this.doll && this.doll._renderComponent && this.player) {
@@ -1872,66 +2052,52 @@ export class SquidGameGame extends BaseGame {
   }
 
   renderQuestionOverlay(ctx: CanvasRenderingContext2D): void {
-    // Semi-transparent background
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.85)'
-    ctx.fillRect(0, 0, this.width, this.height)
-
-    // Question box
-    const boxWidth = 800
-    const boxHeight = 500
-    const boxX = (this.width - boxWidth) / 2
-    const boxY = (this.height - boxHeight) / 2
-
-    ctx.fillStyle = '#1a1a1a'
-    ctx.fillRect(boxX, boxY, boxWidth, boxHeight)
-    
-    ctx.strokeStyle = '#ff0000'
-    ctx.lineWidth = 4
-    ctx.strokeRect(boxX, boxY, boxWidth, boxHeight)
-
-    // Question text
-    ctx.fillStyle = '#ffffff'
-    ctx.font = 'bold 32px monospace'
+    if (!this.currentQuestion) {
+      return
+    }
+    const q = this.currentQuestion
+    // Minimal, non-obscuring HUD: no dark overlay or large menu box
+    // Draw a small header and options directly on screen
+    ctx.save()
     ctx.textAlign = 'center'
-    ctx.fillText('RED LIGHT - ANSWER THE QUESTION', this.width / 2, boxY + 60)
-    
+    ctx.shadowColor = 'rgba(0,0,0,0.6)'
+    ctx.shadowBlur = 6
+    ctx.shadowOffsetX = 0
+    ctx.shadowOffsetY = 2
+
+    // Header
     ctx.fillStyle = '#ff0000'
-    ctx.font = 'bold 28px monospace'
-    ctx.fillText(this.currentQuestion.question, this.width / 2, boxY + 120)
+    ctx.font = 'bold 26px monospace'
+    ctx.fillText('ANSWER THE QUESTION', this.width / 2, 140)
 
-    // Options
+    // Question
     ctx.fillStyle = '#ffffff'
-    ctx.font = '24px monospace'
+    ctx.font = 'bold 24px monospace'
+    ctx.fillText(q.question, this.width / 2, 180)
+
+    // Options in two columns or one column centered
     const optionLabels = ['1', '2', '3', '4']
-    const optionYStart = boxY + 180
-    const optionSpacing = 70
-
-    this.currentQuestion.options.forEach((option: string, index: number) => {
-      const optionY = optionYStart + index * optionSpacing
-      const optionBoxX = boxX + 50
-      const optionBoxY = optionY - 25
-      const optionBoxWidth = boxWidth - 100
-      const optionBoxHeight = 50
-
-      // Option box background
-      ctx.fillStyle = '#2a2a2a'
-      ctx.fillRect(optionBoxX, optionBoxY, optionBoxWidth, optionBoxHeight)
-      
-      ctx.strokeStyle = '#666666'
-      ctx.lineWidth = 2
-      ctx.strokeRect(optionBoxX, optionBoxY, optionBoxWidth, optionBoxHeight)
-
-      // Option text
+    ctx.font = '22px monospace'
+    ctx.textAlign = 'left'
+    const colX = this.width / 2 - 260
+    const lineHeight = 36
+    q.options.forEach((option: string, index: number) => {
+      const y = 220 + index * lineHeight
+      // Bullet
+      ctx.fillStyle = '#00ffd0'
+      ctx.fillText(`${optionLabels[index]}.`, colX, y)
+      // Text
       ctx.fillStyle = '#ffffff'
-      ctx.textAlign = 'left'
-      ctx.fillText(`${optionLabels[index]}. ${option}`, optionBoxX + 20, optionY + 5)
+      ctx.fillText(`${option}`, colX + 40, y)
     })
 
-    // Instructions
-    ctx.fillStyle = '#888888'
-    ctx.font = '20px monospace'
+    // Instruction
     ctx.textAlign = 'center'
-    ctx.fillText('Press 1, 2, 3, or 4 to select your answer', this.width / 2, boxY + boxHeight - 40)
+    ctx.fillStyle = '#cccccc'
+    ctx.font = '18px monospace'
+    ctx.fillText('Press 1, 2, 3, or 4', this.width / 2, 220 + q.options.length * lineHeight + 20)
+
+    ctx.restore()
   }
 
   renderGameOver(ctx: CanvasRenderingContext2D): void {
