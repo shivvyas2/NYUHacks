@@ -1,4 +1,4 @@
-import { Game } from '@/types/game'
+import { Game } from '@/games/subway-surfers/types/game'
 
 export const games: Game[] = [
   {

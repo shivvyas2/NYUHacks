@@ -19,8 +19,15 @@ export function GameContainer({ gameId }: GameContainerProps) {
 
     const canvas = canvasRef.current
     const container = containerRef.current
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
+    
+    // Check if this is a Three.js game (needs WebGL context, not 2D)
+    const isThreeJSGame = gameId === 'subway-surfers' || gameId === 'squid-game'
+    
+    let ctx: CanvasRenderingContext2D | null = null
+    if (!isThreeJSGame) {
+      ctx = canvas.getContext('2d')
+      if (!ctx) return
+    }
 
     // Set canvas to fullscreen dimensions
     const resizeCanvas = () => {
@@ -32,8 +39,18 @@ export function GameContainer({ gameId }: GameContainerProps) {
     window.addEventListener('resize', resizeCanvas)
 
     // Initialize game
-    const gameRenderer = new GameRenderer(ctx, gameId)
+    // For Three.js games, we pass null ctx and the canvas element
+    // For 2D games, we pass the 2D context
+    const gameRenderer = new GameRenderer(ctx, gameId, canvas)
     gameRenderer.init()
+    // Also ensure cleanup on pagehide (e.g., browser back swipe)
+    const handlePageHide = () => {
+      try {
+        ;(window as any).__nyuStopAllAudio?.()
+      } catch {}
+      gameRenderer.cleanup()
+    }
+    window.addEventListener('pagehide', handlePageHide, { once: true })
 
     // Handle ESC key to exit
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -51,6 +68,7 @@ export function GameContainer({ gameId }: GameContainerProps) {
 
     return () => {
       window.removeEventListener('resize', resizeCanvas)
+      window.removeEventListener('pagehide', handlePageHide)
       window.removeEventListener('keydown', handleKeyDown)
       clearTimeout(hideTimer)
       gameRenderer.cleanup()
@@ -58,6 +76,9 @@ export function GameContainer({ gameId }: GameContainerProps) {
   }, [gameId, router])
 
   const handleExit = () => {
+    try {
+      ;(window as any).__nyuStopAllAudio?.()
+    } catch {}
     router.push('/')
   }
 
