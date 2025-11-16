@@ -25,14 +25,21 @@ app = FastAPI(
 
 # CORS middleware - MUST be added before routers
 # This handles OPTIONS preflight requests automatically
+# Get allowed origins from environment or use defaults
+allowed_origins = os.getenv("ALLOWED_ORIGINS", "").split(",") if os.getenv("ALLOWED_ORIGINS") else []
+# Add default localhost origins for development
+default_origins = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001",
+]
+# Combine and filter out empty strings
+allowed_origins = [origin for origin in allowed_origins + default_origins if origin]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:3001",
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:3001",
-    ],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"],
     allow_headers=["*"],
