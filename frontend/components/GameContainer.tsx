@@ -21,17 +21,12 @@ export function GameContainer({ game }: GameContainerProps) {
   const [loadingProgress, setLoadingProgress] = useState(0)
   const [loadingMessage, setLoadingMessage] = useState('Initializing...')
 
-  // Render specific game containers for Three.js games
-  if (game.id === 'whackamole') {
-    return <WhackAMoleGameContainer gameId={game.id} />
-  }
-
-  if (game.id === 'carnival') {
-    return <CarnivalGameContainer gameId={game.id} />
-  }
-
-  // Default HTML5 Canvas games
+  // Default HTML5 Canvas games - useEffect must be called before any early returns
   useEffect(() => {
+    // Only run for non-whackamole and non-carnival games
+    if (game.id === 'whackamole' || game.id === 'carnival') {
+      return
+    }
     if (!canvasRef.current) return
 
     const canvas = canvasRef.current
@@ -94,6 +89,16 @@ export function GameContainer({ game }: GameContainerProps) {
       rendererRef.current?.cleanup()
     }
   }, [game.id])
+
+  // Render specific game containers for Three.js games
+  // These early returns must come AFTER all hooks
+  if (game.id === 'whackamole') {
+    return <WhackAMoleGameContainer gameId={game.id} />
+  }
+
+  if (game.id === 'carnival') {
+    return <CarnivalGameContainer gameId={game.id} />
+  }
 
   return (
     <div ref={containerRef} className="relative w-screen h-screen" style={{ margin: 0, padding: 0, overflow: 'hidden' }}>
