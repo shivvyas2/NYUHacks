@@ -1,6 +1,6 @@
 # NYU Hacks Arcade
 
-A collection of classic arcade games built with Next.js, TypeScript, and Three.js for 3D graphics. Features SAT question integration for educational gameplay.
+A collection of classic arcade games built with Next.js, TypeScript, and Three.js for 3D graphics. Features SAT question integration for educational gameplay with AI-powered adaptive learning.
 
 ## 🎮 Games
 
@@ -63,6 +63,7 @@ NYUHacks/
 │   │   ├── api/         # API routes
 │   │   ├── services/    # Business logic
 │   │   └── models/      # Data models
+│   ├── agent.py         # AI learning agent
 │   └── database/        # Database schema
 ├── start_local.sh        # Quick start script
 └── README.md            # This file
@@ -80,13 +81,8 @@ NYUHacks/
 - **FastAPI** - Python web framework
 - **Supabase** - Authentication and database
 - **Pydantic** - Data validation
-
-## 📚 Documentation
-
-- **[Developer Guide](DEVELOPER_GUIDE.md)** - Local development, testing, and troubleshooting
-- **[Deployment Guide](DEPLOYMENT.md)** - Production deployment instructions
-- **[Frontend README](frontend/README.md)** - Frontend-specific documentation
-- **[Backend README](backend/README.md)** - Backend-specific documentation
+- **Claude Haiku 4.5** (via OpenRouter) - AI-powered question generation
+- **DuckDuckGo Search** - Real SAT question sourcing
 
 ## 🎯 Features
 
@@ -94,8 +90,29 @@ NYUHacks/
 - **Game Score Tracking** - Save and track your game progress
 - **Statistics Dashboard** - View your performance metrics
 - **SAT Question Integration** - Educational gameplay with SAT questions
+- **AI-Powered Adaptive Learning** - Intelligent agent analyzes performance and generates personalized questions
 - **Multiple Game Modes** - Various arcade-style games
 - **3D Graphics** - Immersive Three.js-powered games
+
+## 🤖 AI Learning Agent
+
+The backend includes an intelligent SAT learning agent that:
+
+1. **Analyzes Performance** - Reviews your historical game data from Supabase
+2. **Identifies Weak Topics** - Finds topics where you struggle (<60% accuracy)
+3. **Generates Personalized Questions** - Uses Claude Haiku 4.5 to create custom questions
+4. **Adaptive Strategy** - 60% weak topics, 30% mixed, 10% challenge questions
+5. **Continuous Learning** - Improves question selection based on your progress
+
+See `backend/agent.py` for implementation details.
+
+## 📚 Documentation
+
+- **[Developer Guide](DEVELOPER_GUIDE.md)** - Local development, testing, and troubleshooting
+- **[Deployment Guide](DEPLOYMENT.md)** - Production deployment instructions
+- **[Architecture Guide](ARCHITECTURE.md)** - System design and architecture (from agent branch)
+- **[Frontend README](frontend/README.md)** - Frontend-specific documentation
+- **[Backend README](backend/README.md)** - Backend-specific documentation
 
 ## 🔧 Development
 
@@ -121,6 +138,7 @@ Each game extends `BaseGame` which provides:
 SUPABASE_URL=your_supabase_project_url
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ALLOWED_ORIGINS=http://localhost:3000
+OPENROUTER_API_KEY=your_openrouter_key  # For AI agent
 ```
 
 ### Frontend (`frontend/.env.local`)
