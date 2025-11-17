@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 import { SATQuestion, WhackAMoleGameState, GameAnalytics } from '@/games/whackamole/types'
 import type { WhackAMoleGame } from '@/games/whackamole/WhackAMoleGame'
 import { GameOverModal } from './GameOverModal'
+import { fetchQuestionsWithCache } from '@/lib/api/questions'
+import { satQuestions } from '@/games/whackamole/questions'
 
 interface WhackAMoleGameContainerProps {
   gameId: string
@@ -12,6 +14,8 @@ interface WhackAMoleGameContainerProps {
 export function WhackAMoleGameContainer({ gameId }: WhackAMoleGameContainerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const gameRef = useRef<WhackAMoleGame | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [questions, setQuestions] = useState<SATQuestion[]>(satQuestions)
   const [currentQuestion, setCurrentQuestion] = useState<SATQuestion | null>(null)
   const [gameState, setGameState] = useState<WhackAMoleGameState | null>(null)
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
@@ -19,8 +23,24 @@ export function WhackAMoleGameContainer({ gameId }: WhackAMoleGameContainerProps
   const [gameOver, setGameOver] = useState(false)
   const [analytics, setAnalytics] = useState<GameAnalytics | null>(null)
 
+  // Fetch AI questions on mount
   useEffect(() => {
-    if (!canvasRef.current) return
+    const loadQuestions = async () => {
+      try {
+        const aiQuestions = await fetchQuestionsWithCache('whackamole', 50, satQuestions)
+        setQuestions(aiQuestions)
+      } catch (error) {
+        console.error('Failed to load AI questions:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    loadQuestions()
+  }, [])
+
+  useEffect(() => {
+    if (!canvasRef.current || loading) return
 
     const canvas = canvasRef.current
     let animationFrameId: number
@@ -38,7 +58,7 @@ export function WhackAMoleGameContainer({ gameId }: WhackAMoleGameContainerProps
       resizeHandler()
       window.addEventListener('resize', resizeHandler)
 
-      game = new WhackAMoleGameClass(canvas.width, canvas.height, canvas)
+      game = new WhackAMoleGameClass(canvas.width, canvas.height, canvas, questions)
       gameRef.current = game
 
       game.onQuestionChange = (question) => {
@@ -108,10 +128,28 @@ export function WhackAMoleGameContainer({ gameId }: WhackAMoleGameContainerProps
         game.cleanup()
       }
     }
-  }, [])
+  }, [loading, questions])
 
   const handleRestart = () => {
     window.location.reload()
+  }
+
+  // Show loading screen while fetching AI questions
+  if (loading) {
+    return (
+      <div className="fixed inset-0 w-screen h-screen bg-gradient-to-br from-green-600 via-yellow-500 to-orange-400 overflow-hidden flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">🔨</div>
+          <div className="text-white text-2xl font-bold mb-2">Loading AI Questions...</div>
+          <div className="text-white/80">Generating personalized SAT questions with Claude Haiku 4.5</div>
+          <div className="mt-4">
+            <div className="w-64 h-2 bg-white/20 rounded-full overflow-hidden mx-auto">
+              <div className="h-full bg-white animate-pulse" style={{ width: '60%' }}></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

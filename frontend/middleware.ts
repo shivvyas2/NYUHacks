@@ -1,23 +1,17 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  // TESTING MODE: Authentication bypassed
-  // TODO: Re-enable authentication before production deployment
-  
   // Check for auth token in cookies or headers
   const token = request.cookies.get('auth_token')?.value || 
                 request.headers.get('authorization')?.replace('Bearer ', '')
 
-  // PROTECTED ROUTES - DISABLED FOR TESTING
-  // Uncomment below to re-enable authentication:
-  /*
+  // PROTECTED ROUTES - Require authentication for dashboard and games
   if ((request.nextUrl.pathname.startsWith('/dashboard') || request.nextUrl.pathname.startsWith('/games')) && !token) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     url.searchParams.set('redirect', request.nextUrl.pathname)
     return NextResponse.redirect(url)
   }
-  */
 
   // Redirect authenticated users away from auth pages
   if ((request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup') && token) {

@@ -11,9 +11,18 @@ class ApiClient {
 
   constructor(baseUrl: string = API_BASE_URL) {
     this.baseUrl = baseUrl
-    // Load token from localStorage on initialization
+    // Load token from localStorage or cookies on initialization
     if (typeof window !== 'undefined') {
       this.token = localStorage.getItem('auth_token')
+      // If not in localStorage, try to get from cookie
+      if (!this.token) {
+        const cookieMatch = document.cookie.match(/auth_token=([^;]+)/)
+        if (cookieMatch) {
+          this.token = cookieMatch[1]
+          // Sync back to localStorage
+          localStorage.setItem('auth_token', this.token)
+        }
+      }
     }
   }
 
@@ -22,8 +31,12 @@ class ApiClient {
     if (typeof window !== 'undefined') {
       if (token) {
         localStorage.setItem('auth_token', token)
+        // Also set cookie for middleware auth check
+        document.cookie = `auth_token=${token}; path=/; max-age=604800; SameSite=Lax`
       } else {
         localStorage.removeItem('auth_token')
+        // Clear cookie on logout
+        document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
       }
     }
   }
@@ -159,6 +172,16 @@ class ApiClient {
     params.append('limit', limit.toString())
     
     return this.request(`/api/questions/?${params.toString()}`)
+  }
+
+  // Get AI-generated personalized questions
+  async getAIQuestions(limit: number = 50, useWebSearch: boolean = true) {
+    const params = new URLSearchParams()
+    params.append('use_agent', 'true')
+    params.append('limit', limit.toString())
+    if (useWebSearch) params.append('use_web_search', 'true')
+    
+    return this.request<{ questions: any[], total: number }>(`/api/questions/?${params.toString()}`)
   }
 
   async getTopics() {

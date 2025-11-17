@@ -3,7 +3,7 @@ from typing import List, Dict
 import json
 import time
 from src.config import OPENROUTER_API_KEY
-from duckduckgo_search import DDGS
+from ddgs import DDGS
 from src.services.supabase_agent_ops import SupabaseAgentOps
 
 # Use OpenRouter (compatible with OpenAI API)
@@ -15,7 +15,7 @@ client = OpenAI(
 # Initialize DuckDuckGo search with retry capability
 def get_ddg_instance():
     """Get a fresh DuckDuckGo instance"""
-    return DDGS(timeout=20)
+    return DDGS()
 
 class SATLearningAgent:
     """
@@ -70,13 +70,19 @@ class SATLearningAgent:
                     print(f"   ⏳ Waiting {wait_time}s before retry {attempt + 1}...")
                     time.sleep(wait_time)
                 
-                results = ddg.text(query, max_results=num_results)
+                # Use the text search method with the new API
+                results = list(ddg.text(query, max_results=num_results))
                 
                 context = f"\n### Real SAT Resources for {topic}:\n"
                 found_count = 0
-                for i, result in enumerate(results, 1):
-                    context += f"{i}. {result['title']}\n   {result['body'][:150]}...\n"
-                    found_count += 1
+                
+                if results and len(results) > 0:
+                    for i, result in enumerate(results, 1):
+                        title = result.get('title', 'No title')
+                        body = result.get('body', result.get('description', ''))
+                        if body:
+                            context += f"{i}. {title}\n   {body[:150]}...\n"
+                            found_count += 1
                 
                 if found_count > 0:
                     print(f"   ✅ Found {found_count} resources for {topic}")
@@ -125,7 +131,7 @@ TOPIC PERFORMANCE:
         
         return context
     
-    async def generate_questions(self, num_questions: int = 50, use_web_search: bool = False) -> List[Dict]:
+    async def generate_questions(self, num_questions: int = 50, use_web_search: bool = True) -> List[Dict]:
         """
         Generates personalized SAT questions using AI agent with context
         Can optionally search the web for real SAT question examples

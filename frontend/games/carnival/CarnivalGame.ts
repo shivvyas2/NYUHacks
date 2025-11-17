@@ -43,9 +43,9 @@ export class CarnivalGame extends BaseGame {
   public onGameStateChange?: (state: CarnivalGameState) => void
   public onGameOver?: (analytics: GameAnalytics) => void
 
-  constructor(width: number, height: number, canvas: HTMLCanvasElement) {
+  constructor(width: number, height: number, canvas: HTMLCanvasElement, questions?: SATQuestion[]) {
     super(width, height, canvas)
-    this.questions = [...satQuestions]
+    this.questions = questions && questions.length > 0 ? [...questions] : [...satQuestions]
     
     this.gameState = {
       score: 0,

@@ -4,6 +4,7 @@ Supports both static questions and AI-generated personalized questions
 """
 
 from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from src.models.schemas import QuestionResponse, Question
 from src.utils.database import get_db
 from src.api.auth import get_current_user
@@ -12,6 +13,25 @@ from supabase import Client
 from typing import Optional
 
 router = APIRouter()
+security = HTTPBearer(auto_error=False)
+
+# Optional auth dependency - returns None if no token provided
+async def get_current_user_optional(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Client = Depends(get_db)
+) -> Optional[dict]:
+    """Get current authenticated user (optional - returns None if not authenticated)"""
+    if not credentials:
+        return None
+    
+    try:
+        from src.services.auth_service import AuthService
+        token = credentials.credentials
+        auth_service = AuthService(db)
+        user = await auth_service.get_user(token)
+        return user
+    except:
+        return None
 
 @router.get("/", response_model=QuestionResponse)
 async def get_questions(
@@ -19,13 +39,18 @@ async def get_questions(
     difficulty: Optional[str] = Query(None, description="Filter by difficulty (easy, medium, hard)"),
     limit: int = Query(10, ge=1, le=100, description="Number of questions to return"),
     use_agent: bool = Query(False, description="Use AI agent to generate personalized questions"),
-    current_user: dict = Depends(get_current_user),
+    use_web_search: bool = Query(True, description="Use web search for real SAT questions (slower)"),
+    current_user: Optional[dict] = Depends(get_current_user_optional),
     db: Client = Depends(get_db)
 ):
     """Get questions from the question bank
     
     If use_agent=true, the AI agent will analyze user performance and generate
     personalized questions based on weak topics.
+    
+    Works with or without authentication:
+    - With auth: Personalized based on user's performance
+    - Without auth: Generic questions for new users
     """
     try:
         questions = []
@@ -33,8 +58,10 @@ async def get_questions(
         # Use AI agent to generate personalized questions
         if use_agent:
             try:
-                agent = SATLearningAgent(str(current_user["id"]))
-                generated_questions = await agent.generate_questions(num_questions=limit, use_web_search=False)
+                # Use user ID if authenticated, otherwise use a guest ID
+                user_id = str(current_user["id"]) if current_user else "00000000-0000-0000-0000-000000000000"
+                agent = SATLearningAgent(user_id)
+                generated_questions = await agent.generate_questions(num_questions=limit, use_web_search=use_web_search)
                 
                 # Convert agent questions to API format
                 for q in generated_questions:
