@@ -5,10 +5,13 @@ import { ZombieGame } from '@/games/zombie/ZombieGame'
 import { satQuestions } from '@/games/zombie/questions'
 import { SATQuestion, ZombieGameState } from '@/games/zombie/types'
 import { GameOverModal } from './GameOverModal'
+import { fetchQuestionsWithCache } from '@/lib/api/questions'
 
 export default function ZombieGameContainer() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const gameRef = useRef<ZombieGame | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [questions, setQuestions] = useState<SATQuestion[]>(satQuestions)
   const [gameState, setGameState] = useState<ZombieGameState>({
     score: 0,
     correctAnswers: 0,
@@ -26,8 +29,26 @@ export default function ZombieGameContainer() {
   const [showFeedback, setShowFeedback] = useState(false)
   const [isCorrect, setIsCorrect] = useState(false)
 
+  // Fetch AI questions on mount
   useEffect(() => {
-    if (!canvasRef.current) return
+    const loadQuestions = async () => {
+      try {
+        const aiQuestions = await fetchQuestionsWithCache('zombie', 50, satQuestions)
+        setQuestions(aiQuestions)
+        setGameState(prev => ({ ...prev, totalQuestions: aiQuestions.length }))
+      } catch (error) {
+        console.error('Failed to load AI questions:', error)
+        // Fall back to hardcoded questions (already set)
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    loadQuestions()
+  }, [])
+
+  useEffect(() => {
+    if (!canvasRef.current || loading) return
 
     // Dynamic import of ZombieGame
     const initGame = async () => {
@@ -38,7 +59,7 @@ export default function ZombieGameContainer() {
       canvas.width = window.innerWidth
       canvas.height = window.innerHeight
 
-      const game = new ZombieGame(canvas, satQuestions)
+      const game = new ZombieGame(canvas, questions)
       gameRef.current = game
 
       // Setup callbacks
@@ -58,8 +79,8 @@ export default function ZombieGameContainer() {
       }
 
       // Start first question
-      game.spawnZombies(satQuestions[0])
-      setCurrentQuestion(satQuestions[0])
+      game.spawnZombies(questions[0])
+      setCurrentQuestion(questions[0])
 
       // Handle window resize
       const handleResize = () => {
@@ -78,7 +99,7 @@ export default function ZombieGameContainer() {
     }
 
     initGame()
-  }, [])
+  }, [loading, questions])
 
   // Update question when index changes
   useEffect(() => {
@@ -86,13 +107,13 @@ export default function ZombieGameContainer() {
       const state = gameRef.current.getGameState()
       setGameState(state)
       
-      if (state.currentQuestionIndex < satQuestions.length && state.currentQuestionIndex > 0) {
-        const question = satQuestions[state.currentQuestionIndex]
+      if (state.currentQuestionIndex < questions.length && state.currentQuestionIndex > 0) {
+        const question = questions[state.currentQuestionIndex]
         setCurrentQuestion(question)
         gameRef.current.spawnZombies(question)
       }
     }
-  }, [gameState.currentQuestionIndex, gameOver])
+  }, [gameState.currentQuestionIndex, gameOver, questions])
   
   // Poll game state for updates
   useEffect(() => {
@@ -108,6 +129,24 @@ export default function ZombieGameContainer() {
 
   const handlePlayAgain = () => {
     window.location.reload()
+  }
+
+  // Show loading screen while fetching AI questions
+  if (loading) {
+    return (
+      <div className="fixed inset-0 w-screen h-screen bg-black overflow-hidden flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">🧟</div>
+          <div className="text-white text-2xl font-bold mb-2">Loading AI Questions...</div>
+          <div className="text-gray-400">Generating personalized SAT questions with Claude Haiku 4.5</div>
+          <div className="mt-4">
+            <div className="w-64 h-2 bg-gray-800 rounded-full overflow-hidden mx-auto">
+              <div className="h-full bg-green-500 animate-pulse" style={{ width: '60%' }}></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
