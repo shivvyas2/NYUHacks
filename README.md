@@ -2,7 +2,7 @@
 
 A collection of classic arcade games built with Next.js, TypeScript, and Three.js for 3D graphics. Features SAT question integration for educational gameplay with AI-powered adaptive learning.
 
-## 🎮 Games
+##  Games
 
 - **Subway Surfers** - Endless runner - dodge obstacles and collect coins!
 - **Squid Game** - Survive the challenges inspired by the popular series!
@@ -12,7 +12,7 @@ A collection of classic arcade games built with Next.js, TypeScript, and Three.j
 - **Zombie Apocalypse** - First-person shooter! Shoot zombies with correct answers!
 - **Carnival** - Pop balloons to answer SAT questions!
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -49,7 +49,7 @@ npm run dev
 
 Visit [http://localhost:3000](http://localhost:3000) to start playing!
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 NYUHacks/
@@ -69,7 +69,7 @@ NYUHacks/
 └── README.md            # This file
 ```
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 ### Frontend
 - **Next.js 14** - React framework with App Router
@@ -84,7 +84,7 @@ NYUHacks/
 - **Claude Haiku 4.5** (via OpenRouter) - AI-powered question generation
 - **DuckDuckGo Search** - Real SAT question sourcing
 
-## 🎯 Features
+##  Features
 
 - **User Authentication** - Sign up, login, and secure sessions
 - **Game Score Tracking** - Save and track your game progress
@@ -94,7 +94,7 @@ NYUHacks/
 - **Multiple Game Modes** - Various arcade-style games
 - **3D Graphics** - Immersive Three.js-powered games
 
-## 🤖 AI Learning Agent
+##  AI Learning Agent
 
 The backend includes an intelligent SAT learning agent that:
 
@@ -106,7 +106,7 @@ The backend includes an intelligent SAT learning agent that:
 
 See `backend/agent.py` for implementation details.
 
-## 📚 Documentation
+##  Documentation
 
 - **[Developer Guide](DEVELOPER_GUIDE.md)** - Local development, testing, and troubleshooting
 - **[Deployment Guide](DEPLOYMENT.md)** - Production deployment instructions
@@ -114,7 +114,7 @@ See `backend/agent.py` for implementation details.
 - **[Frontend README](frontend/README.md)** - Frontend-specific documentation
 - **[Backend README](backend/README.md)** - Backend-specific documentation
 
-## 🔧 Development
+##  Development
 
 ### Adding a New Game
 
@@ -131,7 +131,7 @@ Each game extends `BaseGame` which provides:
 - Common game properties
 - Abstract methods for game-specific logic
 
-## 🌐 Environment Variables
+##  Environment Variables
 
 ### Backend (`backend/.env`)
 ```env
@@ -148,7 +148,7 @@ NEXT_PUBLIC_SUPABASE_URL=your_supabase_url  # Optional
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key  # Optional
 ```
 
-## 📦 Installation
+##  Installation
 
 ### Frontend
 ```bash
@@ -164,7 +164,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## 🧪 Testing
+##  Testing
 
 See [Developer Guide](DEVELOPER_GUIDE.md) for detailed testing instructions.
 
@@ -175,7 +175,7 @@ Quick test:
 4. Play a game
 5. Check your stats
 
-## 🚢 Deployment
+##  Deployment
 
 See [Deployment Guide](DEPLOYMENT.md) for complete deployment instructions.
 
@@ -190,7 +190,7 @@ cd frontend
 vercel --prod
 ```
 
-## 🐛 Troubleshooting
+## � Troubleshooting
 
 See [Developer Guide](DEVELOPER_GUIDE.md) for common issues and solutions.
 
@@ -203,14 +203,14 @@ Quick fixes:
 
 MIT
 
-## 🤝 Contributing
+##  Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
 4. Submit a pull request
 
-## 📞 Support
+##  Support
 
 For issues and questions:
 - Check the [Developer Guide](DEVELOPER_GUIDE.md)
